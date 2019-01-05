@@ -1,9 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
-import os, sys, zipfile, shutil, time
+import os, sys, zipfile, shutil, time, platform
+
+def slash():
+    if platform.system() == "Windows":
+        return "\\"
+    else:
+        return "//"
 
 def obtainFiles():
-    browser = webdriver.Firefox(options=options, executable_path=geckoDriverPath)
+    if platform.system() == "Windows":
+        browser = webdriver.Firefox(options=options, executable_path=geckoDriverPath)
+    else:
+        browser = webdriver.Firefox(options=options)
     browser.get("https://studip.uni-trier.de/dispatch.php/start")
 
     # Login
@@ -48,7 +57,7 @@ def obtainFiles():
                     name = name.replace("Übung", "")
                     name = name.replace("Dateien", "")
                     name = name.replace(" -", "")
-                    os.rename(downloadFolder + "\\" + zipFolder, downloadFolder + "\\" + name[1:-1]+".zip")
+                    os.rename(downloadFolder + slash() + zipFolder, downloadFolder + slash() + name[1:-1]+".zip")
                 else:
                     name = zipFolder
                     name = name.replace(":","")
@@ -57,26 +66,26 @@ def obtainFiles():
                     name = name.replace("Dateien", "")
                     name = name.replace(" -", "")
                     name = name.replace("_", "")
-                    os.rename(downloadFolder + "\\" + zipFolder, downloadFolder + "\\" + name)
+                    os.rename(downloadFolder + slash() + zipFolder, downloadFolder + slash() + name)
 
     browser.quit()
 
 ## Comparision temp <-> final folder ##
 def extractionToTarget():
     for zips in os.listdir(downloadFolder): #creating folder with matching names in targetFolder
-        if not os.path.exists(targetFolder + "\\" + zips[0:-4]):
-            os.makedirs(targetFolder + "\\" + zips[:-4])
+        if not os.path.exists(targetFolder + slash() + zips[0:-4]):
+            os.makedirs(targetFolder + slash() + zips[:-4])
 
     for zips in os.listdir(downloadFolder): #list all folders (.zip) in downloadFolder
-        archive = zipfile.ZipFile(os.path.realpath(downloadFolder+"\\"+zips)) #create a zipfile.ZipFile object for every zip to work with
+        archive = zipfile.ZipFile(os.path.realpath(downloadFolder+slash()+zips)) #create a zipfile.ZipFile object for every zip to work with
         for folder in os.listdir(targetFolder): #get all folders in the target destination
             if zips[:-4] == folder: #name matching from folder and corresponding zip
                 for info in archive.infolist(): #retrieving name and size
                     zipFileName = info.filename
                     if zipFileName != "archive_filelist.csv":
-                        archive.extract(zipFileName, targetFolder + "\\" + folder)
+                        archive.extract(zipFileName, targetFolder + slash() + folder)
                     elif not "Allgemeiner Dateiordner" in zipFileName and zipFileName != "archive_filelist.csv":
-                        archive.extract(zipFileName, targetFolder + "\\" + folder + "\\Allgemeiner Dateiordner")
+                        archive.extract(zipFileName, targetFolder + slash() + folder + slash() +"Allgemeiner Dateiordner")
 
 
 def checkDuplicates(tempPath, rootPath):
@@ -106,39 +115,41 @@ def checkFolder(tempPath, rootPath):
     """
     if os.path.isdir(rootPath):
         for subcontent in os.listdir(rootPath):
-            if os.path.isdir(rootPath + "\\" + subcontent):
-                checkFolder(tempPath + "\\" + subcontent, rootPath + "\\" + subcontent)
+            if os.path.isdir(rootPath + slash() + subcontent):
+                checkFolder(tempPath + slash() + subcontent, rootPath + slash() + subcontent)
             else:
-                checkDuplicates(tempPath + "\\" + subcontent, rootPath + "\\" + subcontent)
+                checkDuplicates(tempPath + slash() + subcontent, rootPath + slash() + subcontent)
 
 
 def fileMatching():
     for subfolders in os.listdir(targetFolder):
         try:
-            if os.path.exists(targetFolder + "\\" + subfolders + "\\Allgemeiner Dateiordner"):
-                for subfiles in os.listdir(targetFolder + "\\" + subfolders + "\\Allgemeiner Dateiordner"):
-                    if os.path.exists(targetFolder + "\\" + subfolders + "\\" + subfiles): #duplicate files
-                        if os.path.isfile(targetFolder + "\\" + subfolders + "\\" + subfiles):
-                            checkDuplicates(targetFolder + "\\" + subfolders + "\\" + "Allgemeiner Dateiordner" + "\\" + subfiles,targetFolder + "\\" + subfolders + "\\" + subfiles)
-                    elif os.path.isdir(targetFolder + "\\" + subfolders + "\\" + subfiles):
-                        checkFolder(targetFolder + "\\" + subfolders + "\\" + "Allgemeiner Dateiordner" + "\\" + subfiles, targetFolder + "\\" + subfolders + "\\" + subfiles)
+            if os.path.exists(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner"):
+                for subfiles in os.listdir(targetFolder + slash() + subfolders + slash() +"Allgemeiner Dateiordner"):
+                    if os.path.exists(targetFolder + slash() + subfolders + slash() + subfiles): #duplicate files
+                        if os.path.isfile(targetFolder + slash() + subfolders + slash() + subfiles):
+                            checkDuplicates(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner" + slash() + subfiles,targetFolder + slash() + subfolders + slash() + subfiles)
+                    elif os.path.isdir(targetFolder + slash() + subfolders + slash() + subfiles):
+                        checkFolder(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner" + slash() + subfiles, targetFolder + slash() + subfolders + slash() + subfiles)
                     else:
-                        os.rename(targetFolder + "\\" + subfolders + "\\Allgemeiner Dateiordner" + "\\" + subfiles, targetFolder + "\\" + subfolders + "\\" + subfiles)
+                        os.rename(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner" + slash() + subfiles, targetFolder + slash() + subfolders + slash() + subfiles)
                         print("Created new file: " + subfiles)
                         pass
-                shutil.rmtree(targetFolder + "\\" + subfolders + "\\" + "Allgemeiner Dateiordner")
+                shutil.rmtree(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner")
         except FileNotFoundError:
             pass
 
     time.sleep(10)
-    shutil.rmtree(downloadFolder)
+    for temp in os.listdir(downloadFolder):
+        os.rename(downloadFolder + slash() + temp)
 
 if __name__ == "__main__":
     ### SETUP ###
     # Only change this part of the file!
     downloadFolder = r"Path\To\Folder" #path to a temporary folder, storing the zips for a limited time
     targetFolder = r"Path\To\Folder" #path to your downloaded files
-    geckoDriverPath = r"Path\To\Folder" #path to geckodriver added to PATH
+    if platform.system() == "Windows":
+        geckoDriverPath = r"Path\To\Folder" #path to geckodriver ON WINDOWS SYSTEMS ONLY
     username = "USERNAME" #your user name for studip
     password = "PASSWORD" #your password for studip
 
@@ -151,7 +162,8 @@ if __name__ == "__main__":
     options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
     options.headless = True
 
-    shutil.rmtree(downloadFolder)
+    for temp in os.listdir(downloadFolder):
+        os.remove(downloadFolder + slash() + temp)
     obtainFiles()
     extractionToTarget()
     fileMatching()
