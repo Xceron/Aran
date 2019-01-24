@@ -1,170 +1,200 @@
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-import os, sys, zipfile, shutil, time, platform
+import platform
+import shutil
+import requests
+import re
+import zipfile
+import io
+import pickle
+import os
+
+### ----------------------------SETUP---------------------------- ###
+# Only change this part of the program
+# Change this to your username used in Studip
+username = "USERNAME"
+# Change this to your password used in Studip
+password = "PASSWORD"
+# Change this to the destination path where the files should be
+# downloaded. The r"" has to stay in order to work!
+dst_folder = r"path\to\folder"
+### ------------------------------------------------------------- ###
+
+def get_files():
+    """
+    :return: downloads all files/folders from Studip
+    """
+    sl = slash()
+    with requests.Session() as r:
+        homepage = r.get(url_login)
+        homepage_text = homepage.text
+        security_token = re.search("""name="security_token" value="(.*)=">""", homepage_text)
+        login_ticket = re.search("""name="login_ticket" value="(.*)">""", homepage_text)
+        try:
+            payload = {"security_ticket": security_token.group(1),
+                       "login_ticket": login_ticket.group(1),
+                       "loginname": username,
+                       "password": password}
+            login_start = r.post(url_login, data=payload)
+            if "angemeldet" in login_start.text:
+                print("Login successful!")
+            else:
+                print("Wrong password and/or username")
+                exit()
+        except AttributeError:
+            # weird cases where AttributeError gets thrown
+            get_files()
+        my_courses = r.get("https://studip.uni-trier.de/dispatch.php/my_courses")
+        my_courses_links = re.findall(r'(https://[^\s]+2Fcourse%2Ffiles+[^\s])', my_courses.text)
+        module_links = []
+        for j in range(len(my_courses_links)):  # gathers all links to My Courses
+            if my_courses_links[j] == my_courses_links[j - 1]:
+                course_id = re.search("auswahl=(.*)&amp", my_courses_links[j]).group(1)
+                course_id = course_id.replace("auswahl=", "")
+                course_id = course_id.replace("&amp", "")
+                module_links.append("https://studip.uni-trier.de/dispatch.php/course/files?cid=" + course_id)
+        for sites in module_links:  # My Courses - files overview site
+            site_get = r.get(sites)
+            save_cookies(r.cookies, "cookies")
+            folder_name = make_folder_name(re.findall("""<title data-original="(.*)">""", site_get.text)[0])
+            if not os.path.exists(dst_folder + sl + folder_name):  # checks if the folder already exists
+                os.makedirs(dst_folder + sl + folder_name)  # creates destination folder
+            download_folder(site_get, dst_folder + sl + folder_name)
+
+
+def make_folder_name(old_name):
+    """
+    :param old_name: unformatted name
+    :return: gets rid of useless words for a easier to find folder name in dst_folder
+    """
+    for sign in ["Vorlesung", "Übung", "Tutorium", " - Dateien", ": "]:
+        old_name = old_name.replace(sign, "")
+    return old_name
+
+
+def save_cookies(requests_cookiejar, filename):
+    """
+    :param requests_cookiejar: CookieJar object
+    :param filename: filename of the cookie
+    :return: saves the cookie in the same directory as this .py
+    """
+    with open(filename, "wb") as f:
+        pickle.dump(requests_cookiejar, f)
+
+
+def load_cookies(filename):
+    """
+    :param filename: filename used in save_cookies
+    :return: cookieJar object used for saving the session
+    """
+    with open(filename, "rb") as f:
+        return pickle.load(f)
+
+
+def download_folder(url, path):
+    """
+    :param url: url to a a site containing files and/or folders
+    :param path: path to dir to download
+    :return: download file to the directory and rename it accordingly
+    """
+    sl = slash()
+    cookies = load_cookies("cookies")
+    folder_url = re.findall("""https://studip.uni-trier.de/dispatch.php/file/download_folder/+(.*)" >""", url.text)
+    for folders in folder_url:
+        response = requests.get("https://studip.uni-trier.de/dispatch.php/file/download_folder/" + folders, stream=True,
+                                cookies=cookies)
+        z = zipfile.ZipFile(io.BytesIO(response.content))
+        z.extractall(path)
+        with open(path + sl + "e", "wb") as out_file:
+            out_file.write(response.content)
+        print("Successfully downloaded a folder!")
+    files_url = re.findall("""https://studip.uni-trier.de/dispatch.php/file/details/+(.*)" data""", url.text)
+    for files in files_url:
+        overview_page = requests.get("https://studip.uni-trier.de/dispatch.php/file/details/" + files, stream=True,
+                                     cookies=cookies)
+        if "Herunterladen" in overview_page.text:
+            file_url = re.search("""https://studip.uni-trier.de/sendfile.php(.*)" tabindex""", overview_page.text)
+            try:
+                fixed_url = file_url.group(1).replace("&amp;", "&")
+                response = requests.get("https://studip.uni-trier.de/sendfile.php" + fixed_url, cookies=cookies)
+                file_name = re.search("file_name=(.*)", fixed_url)
+                file_name = file_name.group(1)
+                file_name = file_name.replace("+", " ")
+                with open(path + sl + file_name, "wb") as out_file:
+                    out_file.write(response.content)
+                print("Successfully downloaded a file!")
+            except AttributeError:
+                download_folder(url, path)
+        else:
+            pass
+
 
 def slash():
+    """
+    :return: appropiate slash for Unix/macOS or Windows based systems
+    """
     if platform.system() == "Windows":
         return "\\"
     else:
         return "//"
 
-def obtainFiles():
-    if platform.system() == "Windows":
-        browser = webdriver.Firefox(options=options, executable_path=geckoDriverPath)
-    else:
-        browser = webdriver.Firefox(options=options)
-    browser.get("https://studip.uni-trier.de/dispatch.php/start")
 
-    # Login
-
-    userNameField = browser.find_element_by_id("loginname")
-    userNameField.send_keys(username)
-    passwordField = browser.find_element_by_id("password")
-    passwordField.send_keys(password)
-    loginField = browser.find_element_by_name("Login")
-    loginField.click()
-    moduleLinks = []
-    folders = []
-    browser.get("https://studip.uni-trier.de/dispatch.php/my_courses")
-
-    for modules in browser.find_elements_by_tag_name("a"):
-        moduleLinks.append(modules.get_attribute("href")) #get all modules
-
-    for i in range(len(moduleLinks)-1):
-        try:
-            if "%2Fcourse%2Ffiles" in moduleLinks[i]:
-                folders.append(moduleLinks[i])
-        except TypeError:
-            pass
-
-    moduleLinks = []
-    for j in range(len(folders)):
-        if folders[j] == folders[j-1]:
-            moduleLinks.append(folders[j])
-
-    for link in moduleLinks:
-            browser.get(link)
-            checkBox = browser.find_element_by_id("all_files_checkbox")
-            checkBox.click()
-            download = browser.find_element_by_name("download")
-            download.click()
-            newName = browser.find_element_by_id("current_page_title").text
-            for zipFolder in os.listdir(downloadFolder):
-                if zipFolder == "Allgemeiner_Dateiordner.zip":
-                    name = newName
-                    name = name.replace(":","")
-                    name = name.replace("Vorlesung", "")
-                    name = name.replace("Übung", "")
-                    name = name.replace("Dateien", "")
-                    name = name.replace(" -", "")
-                    os.rename(downloadFolder + slash() + zipFolder, downloadFolder + slash() + name[1:-1]+".zip")
-                else:
-                    name = zipFolder
-                    name = name.replace(":","")
-                    name = name.replace("Vorlesung", "")
-                    name = name.replace("Übung", "")
-                    name = name.replace("Dateien", "")
-                    name = name.replace(" -", "")
-                    name = name.replace("_", "")
-                    os.rename(downloadFolder + slash() + zipFolder, downloadFolder + slash() + name)
-
-    browser.quit()
-
-## Comparision temp <-> final folder ##
-def extractionToTarget():
-    for zips in os.listdir(downloadFolder): #creating folder with matching names in targetFolder
-        if not os.path.exists(targetFolder + slash() + zips[0:-4]):
-            os.makedirs(targetFolder + slash() + zips[:-4])
-
-    for zips in os.listdir(downloadFolder): #list all folders (.zip) in downloadFolder
-        archive = zipfile.ZipFile(os.path.realpath(downloadFolder+slash()+zips)) #create a zipfile.ZipFile object for every zip to work with
-        for folder in os.listdir(targetFolder): #get all folders in the target destination
-            if zips[:-4] == folder: #name matching from folder and corresponding zip
-                for info in archive.infolist(): #retrieving name and size
-                    zipFileName = info.filename
-                    if zipFileName != "archive_filelist.csv":
-                        archive.extract(zipFileName, targetFolder + slash() + folder)
-                    elif not "Allgemeiner Dateiordner" in zipFileName and zipFileName != "archive_filelist.csv":
-                        archive.extract(zipFileName, targetFolder + slash() + folder + slash() +"Allgemeiner Dateiordner")
+def cleanup(path):
+    sl = slash()
+    for folder in os.listdir(path):
+        for subfolder in os.listdir(path + sl + folder):
+            path_sb = path + sl + folder + sl
+            if subfolder == "e":
+                os.remove(path_sb + "e")
+            if subfolder == "archive_filelist.csv":
+                os.remove(path_sb + "archive_filelist.csv")
+            if subfolder == "Allgemeiner Dateiordner":
+                for files in os.listdir(path_sb + sl + "Allgemeiner Dateiordner"):
+                    path_ad = path_sb + "Allgemeiner Dateiordner" + sl + files
+                    if os.path.isdir(path_ad):
+                        check_folder(path_ad, path_sb + files)
+                    elif os.path.isfile(path_ad):
+                        check_duplicates(path_ad, path_sb + files)
+                    else:
+                        pass
+                shutil.rmtree(path_sb + "Allgemeiner Dateiordner")
 
 
-def checkDuplicates(tempPath, rootPath):
+def check_duplicates(src_path, dst_path):
     """
-    :param tempPath: path to file to check in temporary folder
-    :param rootPath:  path to file to check in final folder
+    :param src_path: path to file to check in temporary folder
+    :param dst_path:  path to file to check in final folder
     deletes smaller file and moves the bigger one to the final folder
     """
-    if os.path.exists(rootPath): #duplicate files
-        if os.path.isfile(rootPath): #handling files
-            if os.path.getsize(tempPath) > os.path.getsize(rootPath):
-                print("Found newer version of file, moving: " + os.path.basename(rootPath))
-                os.remove(rootPath)
-                os.rename(tempPath, rootPath)
-            else: #existing file >= file in zipped dir
-                print("Deleting zipped file: " + os.path.basename(tempPath))
-                os.remove(tempPath)
-        else: #zipped file is new
-            print("Moving new file: " + os.path.basename(rootPath))
-            os.rename(tempPath, rootPath)
+    if os.path.exists(dst_path):  # duplicate files
+        if os.path.isfile(dst_path):  # handling files
+            if os.path.getsize(src_path) > os.path.getsize(dst_path):
+                print("Found newer version of file, moving: " + os.path.basename(dst_path))
+                os.remove(dst_path)
+                os.rename(src_path, dst_path)
+            else:  # existing file >= file in zipped dir
+                print("Deleting downloaded file: " + os.path.basename(src_path))
+                os.remove(src_path)
+    else:  # zipped file is new
+        print("Moving new file: " + os.path.basename(dst_path))
+        os.rename(src_path, dst_path)
 
-def checkFolder(tempPath, rootPath):
+
+def check_folder(src_path, dst_path):
     """
-    :param tempPath: path to folder to check in temporary folder
-    :param rootPath:  path to folder to check in final folder
+    :param src_path: path to folder to check in temporary folder
+    :param dst_path:  path to folder to check in final folder
     recursively checks folders and calls checkDuplicate()
     """
-    if os.path.isdir(rootPath):
-        for subcontent in os.listdir(rootPath):
-            if os.path.isdir(rootPath + slash() + subcontent):
-                checkFolder(tempPath + slash() + subcontent, rootPath + slash() + subcontent)
+    sl = slash()
+    if os.path.isdir(dst_path):
+        for subcontent in os.listdir(dst_path):
+            if os.path.isdir(dst_path + sl + subcontent):
+                check_folder(src_path + sl + subcontent, dst_path + sl + subcontent)
             else:
-                checkDuplicates(tempPath + slash() + subcontent, rootPath + slash() + subcontent)
+                check_duplicates(src_path + sl + subcontent, dst_path + sl + subcontent)
 
-
-def fileMatching():
-    for subfolders in os.listdir(targetFolder):
-        try:
-            if os.path.exists(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner"):
-                for subfiles in os.listdir(targetFolder + slash() + subfolders + slash() +"Allgemeiner Dateiordner"):
-                    if os.path.exists(targetFolder + slash() + subfolders + slash() + subfiles): #duplicate files
-                        if os.path.isfile(targetFolder + slash() + subfolders + slash() + subfiles):
-                            checkDuplicates(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner" + slash() + subfiles,targetFolder + slash() + subfolders + slash() + subfiles)
-                    elif os.path.isdir(targetFolder + slash() + subfolders + slash() + subfiles):
-                        checkFolder(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner" + slash() + subfiles, targetFolder + slash() + subfolders + slash() + subfiles)
-                    else:
-                        os.rename(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner" + slash() + subfiles, targetFolder + slash() + subfolders + slash() + subfiles)
-                        print("Created new file: " + subfiles)
-                        pass
-                shutil.rmtree(targetFolder + slash() + subfolders + slash() + "Allgemeiner Dateiordner")
-        except FileNotFoundError:
-            pass
-
-    time.sleep(10)
-    for temp in os.listdir(downloadFolder):
-        os.rename(downloadFolder + slash() + temp)
 
 if __name__ == "__main__":
-    ### SETUP ###
-    # Only change this part of the file!
-    downloadFolder = r"Path\To\Folder" #path to a temporary folder, storing the zips for a limited time
-    targetFolder = r"Path\To\Folder" #path to your downloaded files
-    if platform.system() == "Windows":
-        geckoDriverPath = r"Path\To\Folder" #path to geckodriver ON WINDOWS SYSTEMS ONLY
-    username = "USERNAME" #your user name for studip
-    password = "PASSWORD" #your password for studip
-
-    # Setup Webdriver
-    options = Options()
-    options.set_preference("browser.download.folderList",2)
-    options.set_preference("browser.download.manager.showWhenStarting", False)
-    options.set_preference("browser.download.dir","/data")
-    options.set_preference("browser.download.dir", downloadFolder)
-    options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
-    options.headless = True
-
-    for temp in os.listdir(downloadFolder):
-        os.remove(downloadFolder + slash() + temp)
-    obtainFiles()
-    extractionToTarget()
-    fileMatching()
-    sys.exit()
+    url_login = "https://studip.uni-trier.de/index.php?again=yes"
+    get_files()
+    cleanup(dst_folder)
+    exit()
