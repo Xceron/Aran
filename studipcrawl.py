@@ -189,12 +189,16 @@ def check_folder(src_path, dst_path):
     :return: recursively checks folders and calls check_duplicate()
     """
     sl = slash()
-    if os.path.isdir(dst_path):
-        for subcontent in os.listdir(dst_path):
-            if os.path.isdir(dst_path + sl + subcontent):
-                check_folder(src_path + sl + subcontent, dst_path + sl + subcontent)
-            else:
-                check_duplicates(src_path + sl + subcontent, dst_path + sl + subcontent)
+    if os.path.exists(dst_path):
+        if os.path.isdir(dst_path):
+            for subcontent in os.listdir(src_path):
+                if os.path.isdir(dst_path + sl + subcontent):
+                    check_folder(src_path + sl + subcontent, dst_path + sl + subcontent)
+                else:
+                    check_duplicates(src_path + sl + subcontent, dst_path + sl + subcontent)
+    else:
+        os.makedirs(dst_path)
+        check_folder(src_path,dst_path)
 
 
 if __name__ == "__main__":
