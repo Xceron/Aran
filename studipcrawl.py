@@ -138,6 +138,9 @@ def slash():
 
 
 def cleanup(path):
+    """
+    :return: deletes duplicates and removes useless files
+    """
     sl = slash()
     for folder in os.listdir(path):
         for subfolder in os.listdir(path + sl + folder):
@@ -162,7 +165,7 @@ def check_duplicates(src_path, dst_path):
     """
     :param src_path: path to file to check in temporary folder
     :param dst_path:  path to file to check in final folder
-    deletes smaller file and moves the bigger one to the final folder
+    :return: deletes smaller file and moves the bigger one to the final folder
     """
     if os.path.exists(dst_path):  # duplicate files
         if os.path.isfile(dst_path):  # handling files
@@ -170,10 +173,10 @@ def check_duplicates(src_path, dst_path):
                 print("Found newer version of file, moving: " + os.path.basename(dst_path))
                 os.remove(dst_path)
                 os.rename(src_path, dst_path)
-            else:  # existing file >= file in zipped dir
+            else:  # existing file >= file in downloaded dir
                 print("Deleting downloaded file: " + os.path.basename(src_path))
                 os.remove(src_path)
-    else:  # zipped file is new
+    else:  # downloaded file is new
         print("Moving new file: " + os.path.basename(dst_path))
         os.rename(src_path, dst_path)
 
@@ -182,7 +185,7 @@ def check_folder(src_path, dst_path):
     """
     :param src_path: path to folder to check in temporary folder
     :param dst_path:  path to folder to check in final folder
-    recursively checks folders and calls checkDuplicate()
+    :return: recursively checks folders and calls check_duplicate()
     """
     sl = slash()
     if os.path.isdir(dst_path):
