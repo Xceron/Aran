@@ -11,12 +11,12 @@ import os
 ### ----------------------------SETUP---------------------------- ###
 # Only change this part of the program
 # Change this to your username used in Studip
-username = "USERNAME"
+USERNAME = "USERNAME"
 # Change this to your password used in Studip
-password = "PASSWORD"
+PASSWORD = "PASSWORD"
 # Change this to the destination path where the files should be
 # downloaded. The r"" has to stay in order to work!
-dst_folder = r"path\to\folder"
+DST_FOLDER = r"path\to\folder"
 ### ------------------------------------------------------------- ###
 
 def get_files():
@@ -32,8 +32,8 @@ def get_files():
         try:
             payload = {"security_ticket": security_token.group(1),
                        "login_ticket": login_ticket.group(1),
-                       "loginname": username,
-                       "password": password}
+                       "loginname": USERNAME,
+                       "password": PASSWORD}
             login_start = r.post(url_login, data=payload)
             if "angemeldet" in login_start.text:
                 print("Login successful!")
@@ -56,9 +56,9 @@ def get_files():
             site_get = r.get(sites)
             save_cookies(r.cookies, "cookies")
             folder_name = make_folder_name(re.findall("""<title data-original="(.*)">""", site_get.text)[0])
-            if not os.path.exists(dst_folder + sl + folder_name):  # checks if the folder already exists
-                os.makedirs(dst_folder + sl + folder_name)  # creates destination folder
-            download_folder(site_get, dst_folder + sl + folder_name)
+            if not os.path.exists(DST_FOLDER + sl + folder_name):  # checks if the folder already exists
+                os.makedirs(DST_FOLDER + sl + folder_name)  # creates destination folder
+            download_folder(site_get, DST_FOLDER + sl + folder_name)
 
 
 def make_folder_name(old_name):
@@ -204,5 +204,5 @@ def check_folder(src_path, dst_path):
 if __name__ == "__main__":
     url_login = "https://studip.uni-trier.de/index.php?again=yes"
     get_files()
-    cleanup(dst_folder)
+    cleanup(DST_FOLDER)
     exit()
