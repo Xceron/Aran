@@ -16,7 +16,7 @@ USERNAME = "USERNAME"
 PASSWORD = "PASSWORD"
 # Change this to the destination path where the files should be
 # downloaded. The r"" has to stay in order to work!
-DST_FOLDER = r"path\to\folder"
+DST_FOLDER = r"PATH/TO/DIR"
 ### ------------------------------------------------------------- ###
 
 def get_files():
@@ -104,7 +104,7 @@ def download_folder(url, path):
                                 cookies=cookies)
         z = zipfile.ZipFile(io.BytesIO(response.content))
         z.extractall(path)
-        with open(path + sl + "e", "wb") as out_file:
+        with open(path + sl + "PLACEHOLDER_TO_DELETE", "wb") as out_file:
             out_file.write(response.content)
         print("Successfully downloaded a folder!")
     files_url = re.findall("""https://studip.uni-trier.de/dispatch.php/file/details/+(.*)" data""", url.text)
@@ -144,22 +144,28 @@ def cleanup(path):
     """
     sl = slash()
     for folder in os.listdir(path):
-        for subfolder in os.listdir(path + sl + folder):
-            path_sb = path + sl + folder + sl
-            if subfolder == "e":
-                os.remove(path_sb + "e")
-            if subfolder == "archive_filelist.csv":
-                os.remove(path_sb + "archive_filelist.csv")
-            if subfolder == "Allgemeiner Dateiordner":
-                for files in os.listdir(path_sb + sl + "Allgemeiner Dateiordner"):
-                    path_ad = path_sb + "Allgemeiner Dateiordner" + sl + files
-                    if os.path.isdir(path_ad):
-                        check_folder(path_ad, path_sb + files)
-                    elif os.path.isfile(path_ad):
-                        check_duplicates(path_ad, path_sb + files)
-                    else:
-                        pass
-                shutil.rmtree(path_sb + "Allgemeiner Dateiordner")
+        if folder == ".DS_Store":
+            os.remove(path + sl + folder)
+        else:
+            for subfolder in os.listdir(path + sl + folder):
+                path_sb = path + sl + folder + sl
+                if subfolder == ".DS_Store":
+                    os.remove(path_sb + ".DS_STORE")
+                if subfolder == "PLACEHOLDER_TO_DELETE":
+                    os.remove(path_sb + "PLACEHOLDER_TO_DELETE")
+                if subfolder == "archive_filelist.csv":
+                    os.remove(path_sb + "archive_filelist.csv")
+                if subfolder == "Allgemeiner Dateiordner":
+                    for files in os.listdir(path_sb + sl + "Allgemeiner Dateiordner"):
+                        path_ad = path_sb + "Allgemeiner Dateiordner" + sl + files
+                        if os.path.isdir(path_ad):
+                            check_folder(path_ad, path_sb + files)
+                        elif os.path.isfile(path_ad):
+                            check_duplicates(path_ad, path_sb + files)
+                        else:
+                            pass
+                    shutil.rmtree(path_sb + "Allgemeiner Dateiordner")
+    os.remove("cookies")
 
 
 def check_duplicates(src_path, dst_path):
