@@ -31,16 +31,22 @@ def get_files():
         security_token = soup.find("input", {"name": "security_token"})["value"]
         login_ticket = soup.find("input", {"name": "login_ticket"})["value"]
         try:
-            payload = {"security_ticket": security_token,
-                       "login_ticket": login_ticket,
-                       "loginname": USERNAME,
-                       "password": PASSWORD}
-            login_start = r.post(URL_LOGIN, data=payload)
-            if "angemeldet" in login_start.text:
-                print("Login successful!")
-            else:
-                print("Wrong password and/or username")
+            if not homepage.ok:
+                print("User or Studip seems to be offline.")
+                input("Press any key to exit")
                 exit()
+            else:
+                payload = {"security_ticket": security_token,
+                           "login_ticket": login_ticket,
+                           "loginname": USERNAME,
+                           "password": PASSWORD}
+                login_start = r.post(URL_LOGIN, data=payload)
+                if "angemeldet" in login_start.text:
+                    print("Login successful!")
+                else:
+                    print("Wrong password and/or username")
+                    input("Press any key to exit")
+                    exit()
         except AttributeError:
             # weird cases where AttributeError gets thrown
             get_files()
