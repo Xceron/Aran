@@ -7,6 +7,7 @@ import zipfile
 import io
 import pickle
 import os
+from bs4 import BeautifulSoup
 
 ### ----------------------------SETUP---------------------------- ###
 # Only change this part of the program
@@ -25,16 +26,16 @@ def get_files():
     """
     sl = slash()
     with requests.Session() as r:
-        homepage = r.get(url_login)
-        homepage_text = homepage.text
-        security_token = re.search("""name="security_token" value="(.*)=">""", homepage_text)
-        login_ticket = re.search("""name="login_ticket" value="(.*)">""", homepage_text)
+        homepage = r.get(URL_LOGIN)
+        soup = BeautifulSoup(homepage.text, "html.parser")
+        security_token = soup.find("input", {"name": "security_token"})["value"]
+        login_ticket = soup.find("input", {"name": "login_ticket"})["value"]
         try:
-            payload = {"security_ticket": security_token.group(1),
-                       "login_ticket": login_ticket.group(1),
+            payload = {"security_ticket": security_token,
+                       "login_ticket": login_ticket,
                        "loginname": USERNAME,
                        "password": PASSWORD}
-            login_start = r.post(url_login, data=payload)
+            login_start = r.post(URL_LOGIN, data=payload)
             if "angemeldet" in login_start.text:
                 print("Login successful!")
             else:
@@ -44,18 +45,19 @@ def get_files():
             # weird cases where AttributeError gets thrown
             get_files()
         my_courses = r.get("https://studip.uni-trier.de/dispatch.php/my_courses")
-        my_courses_links = re.findall(r'(https://[^\s]+2Fcourse%2Ffiles+[^\s])', my_courses.text)
+        my_courses_links = get_links_from_site(my_courses.text, "2Fcourse%2Ffiles")
         module_links = []
         for j in range(len(my_courses_links)):  # gathers all links to My Courses
             if my_courses_links[j] == my_courses_links[j - 1]:
-                course_id = re.search("auswahl=(.*)&amp", my_courses_links[j]).group(1)
+                course_id = re.search("auswahl=(.*)&", my_courses_links[j]).group(1)
                 course_id = course_id.replace("auswahl=", "")
                 course_id = course_id.replace("&amp", "")
                 module_links.append("https://studip.uni-trier.de/dispatch.php/course/files?cid=" + course_id)
         for sites in module_links:  # My Courses - files overview site
             site_get = r.get(sites)
             save_cookies(r.cookies, "cookies")
-            folder_name = make_folder_name(re.findall("""<title data-original="(.*)">""", site_get.text)[0])
+            soup = BeautifulSoup(site_get.text,"html.parser")
+            folder_name = make_folder_name(soup.find("title")["data-original"])
             if not os.path.exists(DST_FOLDER + sl + folder_name):  # checks if the folder already exists
                 os.makedirs(DST_FOLDER + sl + folder_name)  # creates destination folder
             download_folder(site_get, DST_FOLDER + sl + folder_name)
@@ -89,6 +91,16 @@ def load_cookies(filename):
     with open(filename, "rb") as f:
         return pickle.load(f)
 
+def get_links_from_site(html, url):
+    """
+    :param html: html text
+    :param url: url with regex
+    :return: list with urls
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    site_tags = soup.find_all("a", href=re.compile(url))
+    links = [tags.get("href") for tags in site_tags]
+    return links
 
 def download_folder(url, path):
     """
@@ -98,21 +110,20 @@ def download_folder(url, path):
     """
     sl = slash()
     cookies = load_cookies("cookies")
-    folder_url = re.findall("""https://studip.uni-trier.de/dispatch.php/file/download_folder/+(.*)" >""", url.text)
+    folder_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/download_folder/+(.*)")
     for folders in folder_url:
-        response = requests.get("https://studip.uni-trier.de/dispatch.php/file/download_folder/" + folders, stream=True,
-                                cookies=cookies)
+        response = requests.get(folders, stream=True, cookies=cookies)
         z = zipfile.ZipFile(io.BytesIO(response.content))
         z.extractall(path)
         with open(path + sl + "PLACEHOLDER_TO_DELETE", "wb") as out_file:
             out_file.write(response.content)
         print("Successfully downloaded a folder!")
-    files_url = re.findall("""https://studip.uni-trier.de/dispatch.php/file/details/+(.*)" data""", url.text)
+    files_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/details/+(.*)")
     for files in files_url:
         overview_page = requests.get("https://studip.uni-trier.de/dispatch.php/file/details/" + files, stream=True,
                                      cookies=cookies)
         if "Herunterladen" in overview_page.text:
-            file_url = re.search("""https://studip.uni-trier.de/sendfile.php(.*)" tabindex""", overview_page.text)
+            file_url = get_links_from_site(overview_page.text, "https://studip.uni-trier.de/sendfile.php(.*)")[0]
             try:
                 fixed_url = file_url.group(1).replace("&amp;", "&")
                 response = requests.get("https://studip.uni-trier.de/sendfile.php" + fixed_url, cookies=cookies)
@@ -208,7 +219,7 @@ def check_folder(src_path, dst_path):
 
 
 if __name__ == "__main__":
-    url_login = "https://studip.uni-trier.de/index.php?again=yes"
+    URL_LOGIN = "https://studip.uni-trier.de/index.php?again=yes"
     get_files()
     cleanup(DST_FOLDER)
     exit()
