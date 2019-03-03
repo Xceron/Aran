@@ -1,4 +1,4 @@
-# studipcrawl
+# Filecrawl
 
 A simple crawler based on [requests](https://github.com/requests/requests/) obtaining all available files from the campus management platform Studip.
 
