@@ -85,7 +85,8 @@ def get_files():
                 module_links.append("https://studip.uni-trier.de/dispatch.php/course/files?cid=" + course_id)
         for sites in module_links:  # My Courses - files overview site
             site_get = r.get(sites)
-            save_cookies(r.cookies, "cookies")
+            cookies_path = os.path.expanduser("~/Documents/cookies")
+            save_cookies(r.cookies, cookies_path)
             soup = BeautifulSoup(site_get.text, "html.parser")
             folder_name = filehandling.make_folder_name(soup.find("title")["data-original"])
             if not os.path.exists(dst_folder + sl + folder_name):  # checks if the folder already exists
@@ -131,7 +132,8 @@ def download_folder(url, path):
     :return: download file to the directory and rename it accordingly
     """
     sl = filehandling.slash()
-    cookies = load_cookies("cookies")
+    cookies_path = os.path.expanduser("~/Documents/cookies")
+    cookies = load_cookies(cookies_path)
     folder_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/download_folder/+(.*)")
     for folders in folder_url:
         response = requests.get(folders, stream=True, cookies=cookies)
@@ -161,7 +163,22 @@ def download_folder(url, path):
             pass
 
 
-if __name__ == "__main__":
+def main():
+    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    if not os.path.exists(documents_path):
+        print("No config found \n"
+              "Setup begins")
+        config_handling.create_json_config()
+        if os.path.exists(documents_path):
+            print("Successfully created config in the \"Documents\" folder.\n"
+                  "Starting the download")
+        else:
+            main()
     get_files()
     filehandling.cleanup(config_handling.get_value("path"))
+    input("Press any key to exit")
     exit()
+
+
+if __name__ == "__main__":
+    main()
