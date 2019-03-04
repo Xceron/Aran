@@ -53,8 +53,9 @@ def create_json_config():
         elif backup_small_input in negative_answers:
             data["backup_smaller"] = False
     # convert into json data and save it
-    data_json = json.dumps(data)
-    with open("config.json", "w") as file:
+    data_json = json.dumps(data, indent=4)
+    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    with open(documents_path, "w") as file:
         file.write(data_json)
 
 
@@ -63,6 +64,7 @@ def get_value(key):
     :param key: key of json file
     :return: value of key
     """
-    with open("config.json", "r") as file:
+    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    with open(documents_path, "r") as file:
         data = json.load(file)
         return data[key]
