@@ -1,6 +1,8 @@
 import os
 import shutil
 import platform
+import config_handling
+import datetime
 
 
 def slash():
@@ -50,8 +52,11 @@ def cleanup(path):
                         else:
                             pass
                     shutil.rmtree(path_sb + "Allgemeiner Dateiordner")
-    os.remove("cookies")
+    os.remove(os.path.expanduser("~/Documents/cookies"))
 
+
+def getDate():
+    return datetime.datetime.now().strftime("%Y-%m-%d")
 
 def check_duplicates(src_path, dst_path):
     """
@@ -59,13 +64,35 @@ def check_duplicates(src_path, dst_path):
     :param dst_path:  path to file to check in final folder
     :return: deletes smaller file and moves the bigger one to the final folder
     """
+    sl = slash()
     if os.path.exists(dst_path):  # duplicate files
         if os.path.isfile(dst_path):  # handling files
             if os.path.getsize(src_path) > os.path.getsize(dst_path):
-                print("Found newer version of file, moving: " + os.path.basename(dst_path))
-                os.remove(dst_path)
-                os.rename(src_path, dst_path)
-            else:  # existing file >= file in downloaded dir
+                if config_handling.get_value("backup_bigger"):  # Backup of old file if new file is bigger
+                    print("Found newer version of file. Backed up and moved: " + os.path.basename(dst_path))
+                    folder_name = os.path.dirname(dst_path).replace("\\ ", " ")
+                    if not os.path.exists(folder_name + sl + "Backups"):
+                        os.makedirs(folder_name + sl + "Backups")
+                    filename_with_date = os.path.basename(dst_path) + getDate()
+                    os.rename(dst_path, folder_name + sl + "Backups" + sl + filename_with_date)
+                    os.rename(src_path, dst_path)
+                else:
+                    print("Found newer version of file, moving: " + os.path.basename(dst_path))
+                    os.remove(dst_path)
+                    os.rename(src_path, dst_path)
+            elif os.path.getsize(src_path) < os.path.getsize(dst_path):  # existing file > file in downloaded dir
+                if config_handling.get_value("backup_smaller"):
+                    print("Downloaded file is smaller. Backed up and moved: " + os.path.basename(dst_path))
+                    folder_name_smaller = os.path.dirname(dst_path).replace("\\ ", " ")
+                    if not os.path.exists(folder_name_smaller + sl + "Backups"):
+                        os.makedirs(folder_name_smaller + sl + "Backups")
+                    filename_with_date = os.path.basename(dst_path) + getDate()
+                    os.rename(dst_path, folder_name_smaller + sl + "Backups" + sl + filename_with_date)
+                    os.rename(src_path, dst_path)
+                else:
+                    print("Deleting downloaded file: " + os.path.basename(src_path))
+                    os.remove(src_path)
+            else:
                 print("Deleting downloaded file: " + os.path.basename(src_path))
                 os.remove(src_path)
     else:  # downloaded file is new
