@@ -1,3 +1,4 @@
+# coding: utf8
 import keyring
 
 
@@ -15,4 +16,4 @@ def get_credentials(username):
     :param username: username used for Studip
     :return: password
     """
-    return keyring.get_password("StudipCrawl",username)
+    return keyring.get_password("StudipCrawl", username)
