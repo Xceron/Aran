@@ -5,6 +5,7 @@ import credentials
 import tkinter
 from tkinter import filedialog
 import os
+import getpass
 
 
 def create_json_config():
@@ -24,7 +25,7 @@ def create_json_config():
 
     def check_credentials():
         username = input("Enter your Studip username: ")
-        password = input("Enter your Studip password: ")
+        password = getpass.getpass("Enter your Studip password: ")
         data["username"] = username
         credentials.save_credentials(username, password)
 
@@ -36,7 +37,8 @@ def create_json_config():
         path = input("Enter the path where the files should be saved. If you need help, type \"help\". ")
         if path == "help":
             tkinter.Tk().withdraw()
-            data["path"] = filedialog.askdirectory()
+            path = filedialog.askdirectory()
+        data["path"] = path
     # backup version number 1
     while not (type(data["backup_bigger"]) == bool):
         backup_big_input = input("Do you want to save the old files, if the new file is bigger? \n"
@@ -55,7 +57,8 @@ def create_json_config():
             data["backup_smaller"] = False
     # convert into json data and save it
     data_json = json.dumps(data, indent=4)
-    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    # documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    documents_path = "Filecrawl_config.json"
     with open(documents_path, "w") as file:
         file.write(data_json)
 
@@ -65,7 +68,8 @@ def get_value(key):
     :param key: key of json file
     :return: value of key
     """
-    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    # documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    documents_path = "Filecrawl_config.json"
     with open(documents_path, "r") as file:
         data = json.load(file)
         return data[key]
