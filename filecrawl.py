@@ -174,8 +174,11 @@ def main():
                   "Starting the download")
         else:
             main()
-    get_files()
-    filehandling.cleanup(config_handling.get_value("path"))
+    try:
+        get_files()
+        filehandling.cleanup(config_handling.get_value("path"))
+    except requests.ConnectionError:
+        print("No internet connection found.")
     input("Press any key to exit")
     exit()
 
