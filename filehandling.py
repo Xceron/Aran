@@ -34,7 +34,7 @@ def cleanup(path):
     for folder in os.listdir(path):
         if folder == ".DS_Store":
             os.remove(path + sl + folder)
-        else:
+        elif os.path.isdir(path + sl + folder):
             for subfolder in os.listdir(path + sl + folder):
                 path_sb = path + sl + folder + sl
                 if subfolder == ".DS_Store":
@@ -53,6 +53,8 @@ def cleanup(path):
                         else:
                             pass
                     shutil.rmtree(path_sb + "Allgemeiner Dateiordner")
+        else:  # "folder" is file
+            pass
     os.remove(os.path.expanduser("~/Documents/cookies"))
 
 
