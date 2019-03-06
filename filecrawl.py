@@ -9,6 +9,7 @@ import os
 from bs4 import BeautifulSoup
 import config_handling
 import credentials
+import sys
 
 
 def validate_password(username, password):
@@ -180,7 +181,7 @@ def main():
     except requests.ConnectionError:
         print("No internet connection found.")
     input("Press any key to exit")
-    exit()
+    sys.exit(0)
 
 
 if __name__ == "__main__":
