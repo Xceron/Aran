@@ -6,6 +6,7 @@ import tkinter
 from tkinter import filedialog
 import os
 import getpass
+from colors import Color as Col
 
 
 def create_json_config():
@@ -34,23 +35,23 @@ def create_json_config():
         check_credentials()
     # path
     while not (os.path.exists(data["path"])):
-        path = input("Enter the path where the files should be saved. If you need help, type \"help\". ")
+        path = input(Col.OK + "Enter the path where the files should be saved. If you need help, type \"help\". ")
         if path == "help":
             tkinter.Tk().withdraw()
             path = filedialog.askdirectory()
         data["path"] = path
     # backup version number 1
     while not (type(data["backup_bigger"]) == bool):
-        backup_big_input = input("Do you want to save the old files, if the new file is bigger? \n"
-                                 "This can happen if the new file gets expanded [y/n]")
+        backup_big_input = input(Col.OK + "Do you want to save the old files, if the new file is bigger? \n"
+                                 + Col.OK + "This can happen if the new file gets expanded [y/n]")
         if backup_big_input in positive_answers:
             data["backup_bigger"] = True
         elif backup_big_input in negative_answers:
             data["backup_bigger"] = False
     # backup version number 2
     while not (type(data["backup_smaller"]) == bool):
-        backup_small_input = input("Do you want to save the old files, if the new file is smaller? \n"
-                                   "This can happen if the new file gets compressed [y/n]")
+        backup_small_input = input(Col.OK + "Do you want to save the old files, if the new file is smaller? \n"
+                                   + Col.OK + "This can happen if the new file gets compressed [y/n]")
         if backup_small_input in positive_answers:
             data["backup_smaller"] = True
         elif backup_small_input in negative_answers:

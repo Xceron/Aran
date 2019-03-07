@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import config_handling
 import credentials
 import sys
+from colors import Color as Col
 
 
 def validate_password(username, password):
@@ -25,8 +26,8 @@ def validate_password(username, password):
         login_ticket = soup.find("input", {"name": "login_ticket"})["value"]
         try:
             if not homepage.ok:
-                print("User or Studip seems to be offline.")
-                input("Press any key to exit")
+                print(Col.ERROR + "User or Studip seems to be offline.")
+                input(Col.WARNING + "Press any key to exit")
                 exit()
             else:
                 payload = {"security_ticket": security_token,
@@ -37,7 +38,7 @@ def validate_password(username, password):
                 if "angemeldet" in login_start.text:
                     return True
                 else:
-                    print("Wrong username and/or password")
+                    print(Col.ERROR + "Wrong username and/or password")
                     return False
         except AttributeError:
             # weird cases where AttributeError gets thrown
@@ -57,8 +58,8 @@ def get_files():
         login_ticket = soup.find("input", {"name": "login_ticket"})["value"]
         try:
             if not homepage.ok:
-                print("User or Studip seems to be offline.")
-                input("Press any key to exit")
+                print(Col.ERROR + "User or Studip seems to be offline.")
+                input(Col.WARNING + "Press any key to exit")
                 exit()
             else:
                 payload = {"security_ticket": security_token,
@@ -67,10 +68,10 @@ def get_files():
                            "password": credentials.get_credentials(config_handling.get_value("username"))}
                 login_start = r.post("https://studip.uni-trier.de/index.php?again=yes", data=payload)
                 if "angemeldet" in login_start.text:
-                    print("Login successful!")
+                    print(Col.SUCCESS + "Login successful!")
                 else:
-                    print("Wrong password and/or username")
-                    input("Press any key to exit")
+                    print(Col.ERROR + "Wrong password and/or username")
+                    input(Col.WARNING + "Press any key to exit")
                     exit()
         except AttributeError:
             # weird cases where AttributeError gets thrown
@@ -86,8 +87,7 @@ def get_files():
                 module_links.append("https://studip.uni-trier.de/dispatch.php/course/files?cid=" + course_id)
         for sites in module_links:  # My Courses - files overview site
             site_get = r.get(sites)
-            cookies_path = os.path.expanduser("~/Documents/cookies")
-            save_cookies(r.cookies, cookies_path)
+            save_cookies(r.cookies, "cookies")
             soup = BeautifulSoup(site_get.text, "html.parser")
             folder_name = filehandling.make_folder_name(soup.find("title")["data-original"])
             if not os.path.exists(dst_folder + sl + folder_name):  # checks if the folder already exists
@@ -133,8 +133,7 @@ def download_folder(url, path):
     :return: download file to the directory and rename it accordingly
     """
     sl = filehandling.slash()
-    cookies_path = os.path.expanduser("~/Documents/cookies")
-    cookies = load_cookies(cookies_path)
+    cookies = load_cookies("cookies")
     folder_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/download_folder/+(.*)")
     for folders in folder_url:
         response = requests.get(folders, stream=True, cookies=cookies)
@@ -142,7 +141,7 @@ def download_folder(url, path):
         z.extractall(path)
         with open(path + sl + "PLACEHOLDER_TO_DELETE", "wb") as out_file:
             out_file.write(response.content)
-        print("Successfully downloaded a folder!")
+        print(Col.SUCCESS + "Successfully downloaded a folder!")
     files_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/details/+(.*)")
     for files in files_url:
         overview_page = requests.get("https://studip.uni-trier.de/dispatch.php/file/details/" + files, stream=True,
@@ -157,7 +156,7 @@ def download_folder(url, path):
                 file_name = file_name.replace("+", " ")
                 with open(path + sl + file_name, "wb") as out_file:
                     out_file.write(response.content)
-                print("Successfully downloaded a file!")
+                print(Col.SUCCESS + "Successfully downloaded a file!")
             except AttributeError:
                 download_folder(url, path)
         else:
@@ -165,22 +164,23 @@ def download_folder(url, path):
 
 
 def main():
-    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    # documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    documents_path = "Filecrawl_config.json"
     if not os.path.exists(documents_path):
-        print("No config found \n"
-              "Setup begins")
+        print(Col.WARNING + "No config found \n"
+              + Col.OK + "Setup begins")
         config_handling.create_json_config()
         if os.path.exists(documents_path):
-            print("Successfully created config in the \"Documents\" folder.\n"
-                  "Starting the download")
+            print(Col.SUCCESS + "Successfully created config in the User folder.\n"
+                  + Col.OK + "Starting the download")
         else:
             main()
     try:
         get_files()
         filehandling.cleanup(config_handling.get_value("path"))
     except requests.ConnectionError:
-        print("No internet connection found.")
-    input("Press any key to exit")
+        print(Col.ERROR + "No internet connection found.")
+    input(Col.WARNING + "Press any key to exit")
     sys.exit(0)
 
 
