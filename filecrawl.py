@@ -1,4 +1,5 @@
 # coding: utf8
+
 import filehandling
 import requests
 import re
@@ -144,12 +145,11 @@ def download_folder(url, path):
         print(Col.SUCCESS + "Successfully downloaded a folder!")
     files_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/details/+(.*)")
     for files in files_url:
-        overview_page = requests.get("https://studip.uni-trier.de/dispatch.php/file/details/" + files, stream=True,
-                                     cookies=cookies)
+        overview_page = requests.get(files, stream=True, cookies=cookies)
         if "Herunterladen" in overview_page.text:
             file_url = get_links_from_site(overview_page.text, "https://studip.uni-trier.de/sendfile.php(.*)")[0]
             try:
-                fixed_url = file_url.group(1).replace("&amp;", "&")
+                fixed_url = file_url.replace("&amp;", "&")
                 response = requests.get("https://studip.uni-trier.de/sendfile.php" + fixed_url, cookies=cookies)
                 file_name = re.search("file_name=(.*)", fixed_url)
                 file_name = file_name.group(1)
