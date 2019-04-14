@@ -29,7 +29,7 @@ def validate_password(username, password):
             if not homepage.ok:
                 print(Col.ERROR + "User or Studip seems to be offline.")
                 input(Col.WARNING + "Press any key to exit")
-                exit()
+                sys.exit(0)
             else:
                 payload = {"security_ticket": security_token,
                            "login_ticket": login_ticket,
@@ -61,7 +61,7 @@ def get_files():
             if not homepage.ok:
                 print(Col.ERROR + "User or Studip seems to be offline.")
                 input(Col.WARNING + "Press any key to exit")
-                exit()
+                sys.exit(0)
             else:
                 payload = {"security_ticket": security_token,
                            "login_ticket": login_ticket,
@@ -73,7 +73,7 @@ def get_files():
                 else:
                     print(Col.ERROR + "Wrong password and/or username")
                     input(Col.WARNING + "Press any key to exit")
-                    exit()
+                    sys.exit(0)
         except AttributeError:
             # weird cases where AttributeError gets thrown
             get_files()
@@ -140,7 +140,9 @@ def download_folder(url, path):
         response = requests.get(folders, stream=True, cookies=cookies)
         z = zipfile.ZipFile(io.BytesIO(response.content))
         z.extractall(path)
-        with open(path + sl + "PLACEHOLDER_TO_DELETE", "wb") as out_file:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        with open(path, "wb") as out_file:
             out_file.write(response.content)
         print(Col.SUCCESS + "Successfully downloaded a folder!")
     files_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/details/+(.*)")
