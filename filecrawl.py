@@ -7,6 +7,7 @@ import zipfile
 import io
 import pickle
 import os
+import platform
 from bs4 import BeautifulSoup
 import config_handling
 import credentials
@@ -133,17 +134,33 @@ def download_folder(url, path):
     :param path: path to dir to download
     :return: download file to the directory and rename it accordingly
     """
+    if len(path) >= 255 and platform == "Windows":  # Windows 255 char path length limitation
+        path = u"\\\\?\\{}".format(path)
     sl = filehandling.slash()
     cookies = load_cookies("cookies")
     folder_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/download_folder/+(.*)")
     for folders in folder_url:
         response = requests.get(folders, stream=True, cookies=cookies)
         z = zipfile.ZipFile(io.BytesIO(response.content))
-        z.extractall(path)
-        if not os.path.exists(path):
-            os.makedirs(path)
-        with open(path, "wb") as out_file:
-            out_file.write(response.content)
+        try:
+            z.extractall(r"{}".format(path))
+        except FileNotFoundError:
+            # This exception gets called when the downloaded zip contains a whitespace as the last character before
+            # the suffix, e.g. "zip_folder .zip" and the operating system is Windows. Windows removes the last
+            # whitespace automatically resulting in an error when calling extractall(). This is a workaround.
+            with open(path + sl + "TEMPORARY_ZIP_TO_DELETE.zip", "wb") as out_file:
+                out_file.write(response.content)
+            with zipfile.ZipFile(path + sl + "TEMPORARY_ZIP_TO_DELETE.zip") as zipfolder:
+                for name in zipfolder.filelist:
+                    if name.is_dir():
+                        if not os.path.exists(path + sl + name.filename.replace(" /", "\\")):
+                            os.makedirs(path + sl + name.filename.replace(" /", "\\"))
+                    with zipfolder.open(name.filename) as zip_file_in_folder:
+                        zip_bytes = zip_file_in_folder.read()
+                        if zip_bytes != b'':  # only files (b'' are folders which were already created before)
+                            with open(path + sl + name.filename.replace(" /", "\\"), "wb") as out_file:
+                                out_file.write(zip_bytes)
+            os.remove(path + sl + "TEMPORARY_ZIP_TO_DELETE.zip")
         print(Col.SUCCESS + "Successfully downloaded a folder!")
     files_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/details/+(.*)")
     for files in files_url:
