@@ -169,7 +169,7 @@ def download_folder(url, path):
             file_url = get_links_from_site(overview_page.text, "https://studip.uni-trier.de/sendfile.php(.*)")[0]
             try:
                 fixed_url = file_url.replace("&amp;", "&")
-                response = requests.get("https://studip.uni-trier.de/sendfile.php" + fixed_url, cookies=cookies)
+                response = requests.get(fixed_url, cookies=cookies)
                 file_name = re.search("file_name=(.*)", fixed_url)
                 file_name = file_name.group(1)
                 file_name = file_name.replace("+", " ")
