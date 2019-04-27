@@ -19,14 +19,18 @@ def create_json_config():
         "username": "NAME",
         "path": "",
         "backup_bigger": "x",
-        "backup_smaller": "x"
+        "backup_smaller": "x",
+        "moodle" : "x",
+        "download_videos" : "x"
     }
 
     # username and password
 
     def check_credentials():
-        username = input("Enter your Studip username: ")
-        password = getpass.getpass("Enter your Studip password: ")
+        print(Col.OK + "Enter your Studip username:")
+        username = input()
+        print(Col.OK + "Enter your Studip password: ")
+        password = getpass.getpass()
         data["username"] = username
         credentials.save_credentials(username, password)
 
@@ -35,27 +39,45 @@ def create_json_config():
         check_credentials()
     # path
     while not (os.path.exists(data["path"])):
-        path = input(Col.OK + "Enter the path where the files should be saved. If you need help, type \"help\". ")
+        print(Col.OK + "Enter the path where the files should be downloaded. If you need help, type \"help\".")
+        path = input()
         if path == "help":
             tkinter.Tk().withdraw()
             path = filedialog.askdirectory()
         data["path"] = path
     # backup version number 1
     while not (type(data["backup_bigger"]) == bool):
-        backup_big_input = input(Col.OK + "Do you want to save the old files, if the new file is bigger? \n"
-                                 + Col.OK + "This can happen if the new file gets expanded [y/n]")
+        print(Col.OK + "Do you want to download the old files, if the new file is bigger? \n"
+              + Col.OK + "This can happen if the new file gets expanded [y/n]")
+        backup_big_input = input()
         if backup_big_input in positive_answers:
             data["backup_bigger"] = True
         elif backup_big_input in negative_answers:
             data["backup_bigger"] = False
     # backup version number 2
     while not (type(data["backup_smaller"]) == bool):
-        backup_small_input = input(Col.OK + "Do you want to save the old files, if the new file is smaller? \n"
-                                   + Col.OK + "This can happen if the new file gets compressed [y/n]")
+        print(Col.OK + "Do you want to download the old files, if the new file is smaller? \n"
+              + Col.OK + "This can happen if the new file gets compressed [y/n]")
+        backup_small_input = input()
         if backup_small_input in positive_answers:
             data["backup_smaller"] = True
         elif backup_small_input in negative_answers:
             data["backup_smaller"] = False
+    while not (type(data["moodle"]) == bool):
+        print(Col.OK + "Do you want to download files from moodle? [y/n]")
+        moodle_input = input()
+        if moodle_input in positive_answers:
+            data["moodle"] = True
+            while not (type(data["download_videos"]) == bool):
+                print(Col.OK + "Do you want to download videos? [y/n]")
+                video_input = input()
+                if video_input in positive_answers:
+                    data["download_videos"] = True
+                elif video_input in negative_answers:
+                    data["download_videos"] = False
+        elif moodle_input in negative_answers:
+            data["moodle"] = False
+            data["download_videos"] = False
     # convert into json data and save it
     data_json = json.dumps(data, indent=4)
     # documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")

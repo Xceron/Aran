@@ -97,6 +97,62 @@ def get_files():
             download_folder(site_get, dst_folder + sl + folder_name)
 
 
+def download_files_from_moodle():
+    path = config_handling.get_value("path")
+    with requests.Session() as r:
+        sl = filehandling.slash()
+        login_site = r.get("https://moodle.uni-trier.de/login/index.php")
+        if not login_site.ok:
+            print(Col.ERROR + "User or moodle seems to be offline.")
+            input(Col.WARNING + "Press any key to exit")
+            sys.exit()
+        else:
+            payload = {"username": config_handling.get_value("username"),
+                       "password": credentials.get_credentials(config_handling.get_value("username"))
+                       }
+            # Login
+            r.post("https://moodle.uni-trier.de/login/index.php", data=payload)
+            navigation_site = r.get("https://moodle.uni-trier.de/my/")
+            if "Meine Kurse" in navigation_site.text:
+                print(Col.SUCCESS + "Login to moodle successsful!")
+            else:
+                print(Col.ERROR + "Wrong password and/or username")
+                input(Col.WARNING + "Press any key to exit")
+                sys.exit()
+        # get all courses
+        my_course_links = get_links_from_site(navigation_site.text, "course")
+        for course_site in my_course_links:
+            course_overview = r.get(course_site)
+            files_urls = get_links_from_site(course_overview.text, "/resource/")
+            course_soup = BeautifulSoup(course_overview.text, "html.parser")
+            course_name = course_soup.find("h1").text
+            if not os.path.exists(path + sl + course_name):
+                os.makedirs(path + sl + course_name)
+            # Download files
+            for files_ov_url in files_urls:
+                files_ov_site = r.get(files_ov_url)
+                try:
+                    file_link = get_links_from_site(files_ov_site.text, "/pluginfile.php/")[0]
+                    response = r.get(file_link)
+                    soup = BeautifulSoup(files_ov_site.text, "html.parser")
+                    file_name = soup.find("a", href=re.compile(file_link)).text
+                    # TODO: Add video caching
+                    if file_name[-4:] == ".mp4":
+                        if config_handling.get_value("download_videos"):
+                            print(Col.OK + "Found a video, downloading may take a while")
+                            with open(path + sl + course_name + sl + file_name, "wb") as out_file:
+                                out_file.write(response.content)
+                            print(Col.SUCCESS + "Successfully downloaded a video!")
+                        else:
+                            pass
+                    else:
+                        with open(path + sl + course_name + sl + file_name, "wb") as out_file:
+                            out_file.write(response.content)
+                        print(Col.SUCCESS + "Successfully downloaded a file!")
+                except IndexError:
+                    pass
+
+
 def save_cookies(requests_cookiejar, filename):
     """
     :param requests_cookiejar: CookieJar object
@@ -195,7 +251,9 @@ def main():
         else:
             main()
     try:
-        get_files()
+        # get_files()
+        if config_handling.get_value("moodle"):
+            download_files_from_moodle()
         filehandling.cleanup(config_handling.get_value("path"))
     except requests.ConnectionError:
         print(Col.ERROR + "No internet connection found.")
