@@ -199,7 +199,8 @@ def main():
         filehandling.cleanup(config_handling.get_value("path"))
     except requests.ConnectionError:
         print(Col.ERROR + "No internet connection found.")
-    input(Col.WARNING + "Press any key to exit")
+    print(Col.WARNING + "Press any key to exit")
+    input()
     sys.exit(0)
 
 

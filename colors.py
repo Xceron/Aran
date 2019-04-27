@@ -1,19 +1,17 @@
-# simple class with ANSI color codes
+﻿# coding: utf-8
+import platform
+from colorama import init, Fore
+
+init()
 
 
 class Color:
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    END: str = '\033[0m'
-    WHITE = '\033[37m'
-    OK = BLUE + '[~] ' + END
-    WARNING = YELLOW + "[!] " + END
-    ERROR = RED + "[✗] " + END
-    SUCCESS = GREEN + "[✓] " + END
+    OK = Fore.BLUE + '[~] ' + Fore.RESET
+    WARNING = Fore.YELLOW + "[!] " + Fore.RESET
+    if platform.system() == "Windows":  # Windows cmd isn't able to output unicode characters correctly
+        ERROR = Fore.RED + "[X] " + Fore.RESET
+        SUCCESS = Fore.GREEN + "[S] " + Fore.RESET
+    else:
+        ERROR = Fore.RED + "[✗] " + Fore.RESET
+        SUCCESS = Fore.GREEN + "[✓] " + Fore.RESET
+

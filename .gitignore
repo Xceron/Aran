@@ -183,9 +183,14 @@ venv.bak/
 .idea/modules.xml
 .idea/workspace (Mac-Pro.fritz.boxs in Konflikt stehende Kopie 2019-03-10).xml
 .idea/workspace.xml
+.idea/libraries
 Filecrawl_config.json
 Icons/
 cookies
 filecrawl.spec
 /venv/
 /cookies
+/Filecrawl_config.json
+configs/
+/.idea/libraries/R_User_Library.xml
+.idea/workspace (Mac-Pro.fritz.boxs in Konflikt stehende Kopie 2019-04-16).xml
