@@ -3,8 +3,9 @@
 import os
 import shutil
 import platform
-from filecrawl import config_handling
 import datetime
+
+from . import config_handling
 from .colors import Color as Col
 
 

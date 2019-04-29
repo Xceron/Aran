@@ -7,10 +7,13 @@ import io
 import pickle
 import os
 import platform
-from bs4 import BeautifulSoup
-from filecrawl import config_handling, credentials, filehandling
 import sys
-from .colors import Color as Col
+from bs4 import BeautifulSoup
+
+from filecrawl import filehandling
+from filecrawl import credentials
+from filecrawl import config_handling
+from filecrawl.colors import Color as Col
 
 
 def validate_password(username, password):

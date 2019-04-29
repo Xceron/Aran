@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import json
-from filecrawl import credentials, filecrawl
+from filecrawl import credentials
+import filecrawl
 import tkinter
 from tkinter import filedialog
 import os
 import getpass
+
 from .colors import Color as Col
 
 
