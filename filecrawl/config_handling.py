@@ -1,12 +1,12 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
+
 import json
-import filecrawl
-import credentials
+from filecrawl import credentials, filecrawl
 import tkinter
 from tkinter import filedialog
 import os
 import getpass
-from colors import Color as Col
+from .colors import Color as Col
 
 
 def create_json_config():
@@ -47,7 +47,7 @@ def create_json_config():
         data["path"] = path
     # backup version number 1
     while not (type(data["backup_bigger"]) == bool):
-        print(Col.OK + "Do you want to download the old files, if the new file is bigger? \n"
+        print(Col.OK + "Do you want to backup the old files, if the new file is bigger? \n"
               + Col.OK + "This can happen if the new file gets expanded [y/n]")
         backup_big_input = input()
         if backup_big_input in positive_answers:
@@ -56,7 +56,7 @@ def create_json_config():
             data["backup_bigger"] = False
     # backup version number 2
     while not (type(data["backup_smaller"]) == bool):
-        print(Col.OK + "Do you want to download the old files, if the new file is smaller? \n"
+        print(Col.OK + "Do you want to backup the old files, if the new file is smaller? \n"
               + Col.OK + "This can happen if the new file gets compressed [y/n]")
         backup_small_input = input()
         if backup_small_input in positive_answers:
