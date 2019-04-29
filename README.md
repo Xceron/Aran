@@ -1,11 +1,12 @@
 # Filecrawl
 
-A simple crawler obtaining all available files from the campus management platform Studip.
+A simple crawler obtaining all available files from the campus management platform Studip and moodle.
 
 ## Requirements
 
 + [Python 3.4+](https://www.python.org)
-+ ```pip install -r requirements.txt```
++ ``` cd /path/to/filecrawl/ ```
++ ```pip3 install -r requirements.txt```
 
 ## Usage
 
