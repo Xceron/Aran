@@ -194,3 +194,5 @@ filecrawl.spec
 configs/
 /.idea/libraries/R_User_Library.xml
 .idea/workspace (Mac-Pro.fritz.boxs in Konflikt stehende Kopie 2019-04-16).xml
+/dropbox_upload.py
+.idea/vcs.xml
