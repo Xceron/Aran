@@ -260,8 +260,8 @@ def download_folder(url, path):
 
 
 def main():
-    # documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
-    documents_path = "Filecrawl_config.json"
+    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    # documents_path = "Filecrawl_config.json"
     if not os.path.exists(documents_path):
         print(Col.WARNING + "No config found \n"
               + Col.OK + "Setup begins")

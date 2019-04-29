@@ -93,8 +93,8 @@ def get_value(key):
     :param key: key of json file
     :return: value of key
     """
-    # documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
-    documents_path = "Filecrawl_config.json"
+    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    # documents_path = "Filecrawl_config.json"
     with open(documents_path, "r") as file:
         data = json.load(file)
         return data[key]
