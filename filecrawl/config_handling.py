@@ -1,8 +1,8 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import json
 from filecrawl import credentials
-import filecrawl
 import tkinter
 from tkinter import filedialog
 import os
@@ -22,8 +22,8 @@ def create_json_config():
         "path": "",
         "backup_bigger": "x",
         "backup_smaller": "x",
-        "moodle" : "x",
-        "download_videos" : "x"
+        "moodle": "x",
+        "download_videos": "x"
     }
 
     # username and password
@@ -37,7 +37,7 @@ def create_json_config():
         credentials.save_credentials(username, password)
 
     check_credentials()
-    while not filecrawl.validate_password(data["username"], credentials.get_credentials(data["username"])):
+    while not credentials.validate_password(data["username"], credentials.get_credentials(data["username"])):
         check_credentials()
     # path
     while not (os.path.exists(data["path"])):
@@ -82,8 +82,8 @@ def create_json_config():
             data["download_videos"] = False
     # convert into json data and save it
     data_json = json.dumps(data, indent=4)
-    # documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
-    documents_path = "Filecrawl_config.json"
+    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
+    # documents_path = "Filecrawl_config.json"
     with open(documents_path, "w") as file:
         file.write(data_json)
 

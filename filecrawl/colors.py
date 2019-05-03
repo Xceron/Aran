@@ -1,4 +1,5 @@
-﻿# -*- coding: utf-8 -*-
+﻿#!/usr/bin/python3
+# -*- coding: utf-8 -*-
 
 import platform
 from colorama import init, Fore
