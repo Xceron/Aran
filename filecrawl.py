@@ -143,6 +143,7 @@ def is_new_video(html_header, path):
                 return False
     return True
 
+
 def save_cookies(requests_cookiejar, filename):
     """
     :param requests_cookiejar: CookieJar object
