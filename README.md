@@ -45,7 +45,7 @@ as long as the script is running.
 ####Crontabs
 When you want to run filecrawl as a crontab, you have to have root privileges or run everything with ```sudo```.
 Also, you may have to change the path where the config will be saved in
-[filecrawl/L232](https://github.com/Xceron/Filecrawl/blob/04e178dad31a28cdeb0dd1002fec85b226681113/filecrawl.py#L232),
+[filecrawl/L233](https://github.com/Xceron/Filecrawl/blob/1169aa817fd9e20a54c7f6fc2c406fc2e5fdc6c6/filecrawl.py#L233),
 [config_handling/L89](https://github.com/Xceron/Filecrawl/blob/04e178dad31a28cdeb0dd1002fec85b226681113/filecrawl/config_handling.py#L89)
 and [config_handling/L100](https://github.com/Xceron/Filecrawl/blob/04e178dad31a28cdeb0dd1002fec85b226681113/filecrawl/config_handling.py#L100)
 as the root user has no /User/ folder where the config will be stored.
