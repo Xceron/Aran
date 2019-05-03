@@ -3,8 +3,6 @@
 
 import json
 from filecrawl import credentials
-import tkinter
-from tkinter import filedialog
 import os
 import getpass
 
@@ -44,8 +42,14 @@ def create_json_config():
         print(Col.OK + "Enter the path where the files should be downloaded. If you need help, type \"help\".")
         path = input()
         if path == "help":
-            tkinter.Tk().withdraw()
-            path = filedialog.askdirectory()
+            try:
+                import tkinter
+                from tkinter import filedialog
+                tkinter.Tk().withdraw()
+                path = filedialog.askdirectory()
+            except ImportError:
+                print(Col.ERROR + "Your Python Version is missing Tkinter, it is not possible to open the GUI. Type "
+                                  "the path manually")
         data["path"] = path
     # backup version number 1
     while not (type(data["backup_bigger"]) == bool):
