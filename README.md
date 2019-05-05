@@ -4,9 +4,9 @@ A simple crawler obtaining all available files from the campus management platfo
 Studip and moodle for University Trier
 
 ## Disclaimer
-This version only works for the University Trier and Studip 4.
+This version works only for the University Trier and Studip 4.
 Use the [Studip RESTAPI](https://docs.studip.de/develop/Entwickler/RESTAPI)
-if possible as Crawler are forbidden by many universities. 
+if possible as Crawlers are forbidden by many universities. 
 
 There are other open Source Clients supporting the API, e.g. [studip-fuse](https://github.com/N-Coder/studip-fuse)
 or [STUD.IP-FileSync](https://github.com/rockihack/Stud.IP-FileSync).
