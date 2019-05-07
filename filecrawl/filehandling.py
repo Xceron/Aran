@@ -59,7 +59,7 @@ def cleanup(path):
                     shutil.rmtree(path_sb + "Allgemeiner Dateiordner")
         else:  # "folder" is file
             pass
-    os.remove(os.path.expanduser("cookies"))
+    os.remove("cookies")
 
 
 def get_today():
