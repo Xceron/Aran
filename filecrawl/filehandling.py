@@ -2,12 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os
-import shutil
 import platform
-import datetime
-
-from . import config_handling
-from .colors import Color as Col
+from functools import reduce
+from collections.abc import MutableMapping
 
 
 def slash():
@@ -25,108 +22,56 @@ def make_folder_name(old_name):
     :param old_name: unformatted name
     :return: gets rid of useless words for a easier to find folder name in dst_folder
     """
-    for sign in ["Vorlesung", "Übung", "Tutorium", " - Dateien", ": "]:
+    old_name = old_name.strip()
+    for sign in ["Vorlesung", "Übung: ", "Tutorium", " - Dateien", ": "]:
         old_name = old_name.replace(sign, "")
     return old_name
 
 
-def cleanup(path):
+def get_directory_structure(rootdir):
     """
-    :return: deletes duplicates and removes useless files
+    Creates a nested dictionary that represents the folder structure of rootdir
     """
-    sl = slash()
-    for folder in os.listdir(path):
-        if folder == ".DS_Store":
-            os.remove(path + sl + folder)
-        elif os.path.isdir(path + sl + folder):
-            for subfolder in os.listdir(path + sl + folder):
-                path_sb = path + sl + folder + sl
-                if subfolder == ".DS_Store":
-                    os.remove(path_sb + ".DS_STORE")
-                if subfolder == "PLACEHOLDER_TO_DELETE":
-                    os.remove(path_sb + "PLACEHOLDER_TO_DELETE")
-                if subfolder == "archive_filelist.csv":
-                    os.remove(path_sb + "archive_filelist.csv")
-                if subfolder == "Allgemeiner Dateiordner":
-                    for files in os.listdir(path_sb + sl + "Allgemeiner Dateiordner"):
-                        path_ad = path_sb + "Allgemeiner Dateiordner" + sl + files
-                        if os.path.isdir(path_ad):
-                            check_folder(path_ad, path_sb + files)
-                        elif os.path.isfile(path_ad):
-                            check_duplicates(path_ad, path_sb + files)
-                        else:
-                            pass
-                    shutil.rmtree(path_sb + "Allgemeiner Dateiordner")
-        else:  # "folder" is file
-            pass
-    os.remove(os.path.expanduser("cookies"))
+    return_dict = {}
+    rootdir = rootdir.rstrip(os.sep)
+    start = rootdir.rfind(os.sep) + 1
+    for root, dirs, files in os.walk(rootdir):
+        folders = root[start:].split(os.sep)
+        subdir = dict.fromkeys(files)
+        for name in files:
+            subdir[name] = os.stat(os.path.join(root, name)).st_size
+        parent = reduce(dict.get, folders[:-1], return_dict)
+        parent[folders[-1]] = subdir
+    return return_dict
 
 
-def get_today():
-    """
-    :return: current date
-    """
-    return datetime.datetime.now().strftime("%Y-%m-%d")
+def findkey(dictionary, key):
+    try:
+        if key in dictionary:
+            return dictionary[key]
+        for key_di, sub_dictionary in dictionary.items():
+            val = findkey(sub_dictionary, key)
+            if val:
+                return val
+    except TypeError:
+        return None
 
 
-def check_duplicates(src_path, dst_path):
-    """
-    :param src_path: path to file to check in temporary folder
-    :param dst_path:  path to file to check in final folder
-    :return: deletes smaller file and moves the bigger one to the final folder
-    """
-    sl = slash()
-    if os.path.exists(dst_path):  # duplicate files
-        if os.path.isfile(dst_path):  # handling files
-            if os.path.getsize(src_path) > os.path.getsize(dst_path):
-                if config_handling.get_value("backup_bigger"):  # Backup of old file if new file is bigger
-                    print(
-                        Col.SUCCESS + "Found newer version of file. Backed up and moved: " + os.path.basename(dst_path))
-                    folder_name = os.path.dirname(dst_path).replace("\\ ", " ")
-                    if not os.path.exists(folder_name + sl + "Backups"):
-                        os.makedirs(folder_name + sl + "Backups")
-                    filename_with_date = os.path.basename(dst_path) + get_today()
-                    os.rename(dst_path, folder_name + sl + "Backups" + sl + filename_with_date)
-                    os.rename(src_path, dst_path)
-                else:
-                    print(Col.SUCCESS + "Found newer version of file, moved: " + os.path.basename(dst_path))
-                    os.remove(dst_path)
-                    os.rename(src_path, dst_path)
-            elif os.path.getsize(src_path) < os.path.getsize(dst_path):  # existing file > file in downloaded dir
-                if config_handling.get_value("backup_smaller"):
-                    print(
-                        Col.SUCCESS + "Downloaded file is smaller. Backed up and moved: " + os.path.basename(dst_path))
-                    folder_name_smaller = os.path.dirname(dst_path).replace("\\ ", " ")
-                    if not os.path.exists(folder_name_smaller + sl + "Backups"):
-                        os.makedirs(folder_name_smaller + sl + "Backups")
-                    filename_with_date = os.path.basename(dst_path) + get_today()
-                    os.rename(dst_path, folder_name_smaller + sl + "Backups" + sl + filename_with_date)
-                    os.rename(src_path, dst_path)
-                else:
-                    print(Col.SUCCESS + "Deleted downloaded file: " + os.path.basename(src_path))
-                    os.remove(src_path)
-            else:
-                print(Col.SUCCESS + "Deleted downloaded file: " + os.path.basename(src_path))
-                os.remove(src_path)
-    else:  # downloaded file is new
-        print(Col.SUCCESS + "Moved new file: " + os.path.basename(dst_path))
-        os.rename(src_path, dst_path)
+def flatten(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 
-def check_folder(src_path, dst_path):
-    """
-    :param src_path: path to folder to check in temporary folder
-    :param dst_path:  path to folder to check in final folder
-    :return: recursively checks folders and calls check_duplicate()
-    """
-    sl = slash()
-    if os.path.exists(dst_path):
-        if os.path.isdir(dst_path):
-            for subcontent in os.listdir(src_path):
-                if os.path.isdir(dst_path + sl + subcontent):
-                    check_folder(src_path + sl + subcontent, dst_path + sl + subcontent)
-                else:
-                    check_duplicates(src_path + sl + subcontent, dst_path + sl + subcontent)
-    else:
-        os.makedirs(dst_path)
-        check_folder(src_path, dst_path)
+def find_parent_keys(d, target_key, parent_key=None):
+    for k, v in d.items():
+        if k == target_key:
+            yield parent_key
+        if isinstance(v, dict):
+            for res in find_parent_keys(v, target_key, k):
+                yield res

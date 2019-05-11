@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
-import re
-import zipfile
-import io
+from re import search, compile
 import pickle
 import os
 import platform
@@ -53,7 +51,7 @@ def download_files_from_studip():
         module_links = []
         for j in range(len(my_courses_links)):  # gathers all links to My Courses
             if my_courses_links[j] == my_courses_links[j - 1]:
-                course_id = re.search("auswahl=(.*)&", my_courses_links[j]).group(1)
+                course_id = search("auswahl=(.*)&", my_courses_links[j]).group(1)
                 course_id = course_id.replace("auswahl=", "")
                 course_id = course_id.replace("&amp", "")
                 module_links.append("https://studip.uni-trier.de/dispatch.php/course/files?cid=" + course_id)
@@ -105,13 +103,13 @@ def download_files_from_moodle():
                     file_link = get_links_from_site(files_ov_site.text, "/pluginfile.php/")[0]
                     response_header = r.head(file_link)
                     content_type = response_header.headers.get("content-type")
+                    soup = BeautifulSoup(files_ov_site.text, "html.parser")
+                    file_name = soup.find("a", href=compile(file_link)).text
                     if "video" in content_type:
                         if config_handling.get_value("download_videos"):
                             if is_new_video(response_header.headers, path + sl + course_name):
                                 print(Col.OK + "Found a new video, downloading may take a while")
                                 response = r.get(file_link)
-                                soup = BeautifulSoup(files_ov_site.text, "html.parser")
-                                file_name = soup.find("a", href=re.compile(file_link)).text
                                 with open(path + sl + course_name + sl + file_name, "wb") as out_file:
                                     out_file.write(response.content)
                                 print(Col.SUCCESS + "Successfully downloaded a video!")
@@ -120,12 +118,13 @@ def download_files_from_moodle():
                         else:
                             pass
                     else:
-                        response = r.get(file_link)
-                        soup = BeautifulSoup(files_ov_site.text, "html.parser")
-                        file_name = soup.find("a", href=re.compile(file_link)).text
-                        with open(path + sl + course_name + sl + file_name, "wb") as out_file:
-                            out_file.write(response.content)
-                        print(Col.SUCCESS + "Successfully downloaded a file!")
+                        if is_new_file(response_header, course_name, False):
+                            response = r.get(file_link)
+                            with open(path + sl + course_name + sl + file_name, "wb") as out_file:
+                                out_file.write(response.content)
+                            print(Col.SUCCESS + "Successfully downloaded the following file: {}".format(file_name))
+                        else:
+                            print(Col.OK + "Already downloaded {}, skipping this one".format(file_name))
                 except IndexError:
                     pass
 
@@ -136,7 +135,7 @@ def is_new_video(html_header, path):
     :param path: download path
     :return: boolean
     """
-    filename = re.search("filename=\"(.*)\"\', 'Last", str(html_header)).group(1)
+    filename = search("filename=\"(.*)\"\', 'Last", str(html_header)).group(1)
     for root, dirs, files in os.walk(path):
         for file_names in files:
             if file_names == filename:
@@ -170,7 +169,7 @@ def get_links_from_site(html, url):
     :return: list with urls
     """
     soup = BeautifulSoup(html, "html.parser")
-    site_tags = soup.find_all("a", href=re.compile(url))
+    site_tags = soup.find_all("a", href=compile(url))
     links = [tags.get("href") for tags in site_tags]
     return links
 
@@ -183,50 +182,78 @@ def download_folder(url, path):
     """
     if len(path) >= 255 and platform == "Windows":  # Windows 255 char path length limitation
         path = u"\\\\?\\{}".format(path)
-    sl = filehandling.slash()
     cookies = load_cookies("cookies")
-    folder_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/download_folder/+(.*)")
-    for folders in folder_url:
-        response = requests.get(folders, stream=True, cookies=cookies)
-        z = zipfile.ZipFile(io.BytesIO(response.content))
-        try:
-            z.extractall(r"{}".format(path))
-        except FileNotFoundError:
-            # This exception gets called when the downloaded zip contains a whitespace as the last character before
-            # the suffix, e.g. "zip_folder .zip" and the operating system is Windows. Windows removes the last
-            # whitespace automatically resulting in an error when calling extractall(). This is a workaround.
-            with open(path + sl + "TEMPORARY_ZIP_TO_DELETE.zip", "wb") as out_file:
+    folder_urls = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/course/files/index/(.*)")
+    folder_urls = remove_duplicates(folder_urls)
+    for folders in range(len(folder_urls)):
+        folder_site = requests.get(folder_urls[folders], cookies=cookies)
+        soup = BeautifulSoup(folder_site.text, "html.parser")
+        tag = soup.find_all("a", href=folder_urls[folders])
+        folder_name = filehandling.make_folder_name(tag[0].text)
+        files_url = get_links_from_site(folder_site.text, "https://studip.uni-trier.de/dispatch.php/file/details/+(.*)")
+        files_url = remove_duplicates(files_url)
+        for files in files_url:
+            download_file(files, path, folders == 0, folder_name)
+        folders += 1
+
+
+def download_file(files_url, path, parent, folder_name):
+    sl = filehandling.slash()
+    if not parent:
+        if not os.path.exists(path + sl + folder_name):
+            os.makedirs(path + sl + folder_name)
+        path = path + sl + folder_name
+    cookies = load_cookies("cookies")
+    overview_page = requests.get(files_url, stream=True, cookies=cookies)
+    sl = filehandling.slash()
+    if "Herunterladen" in overview_page.text:
+        file_url = get_links_from_site(overview_page.text, "https://studip.uni-trier.de/sendfile.php(.*)")[0]
+        fixed_url = file_url.replace("&amp;", "&")
+        cookies = load_cookies("cookies")
+        response_header = requests.head(fixed_url, cookies=cookies)
+        if is_new_file(response_header, os.path.basename(path), parent):
+            response = requests.get(fixed_url, cookies=cookies)
+            file_name = search("file_name=(.*)", fixed_url)
+            file_name = file_name.group(1)
+            file_name = file_name.replace("+", " ")
+            with open(path + sl + file_name, "wb") as out_file:
                 out_file.write(response.content)
-            with zipfile.ZipFile(path + sl + "TEMPORARY_ZIP_TO_DELETE.zip") as zipfolder:
-                for name in zipfolder.filelist:
-                    if name.is_dir():
-                        if not os.path.exists(path + sl + name.filename.replace(" /", "\\")):
-                            os.makedirs(path + sl + name.filename.replace(" /", "\\"))
-                    with zipfolder.open(name.filename) as zip_file_in_folder:
-                        zip_bytes = zip_file_in_folder.read()
-                        if zip_bytes != b'':  # only files (b'' are folders which were already created before)
-                            with open(path + sl + name.filename.replace(" /", "\\"), "wb") as out_file:
-                                out_file.write(zip_bytes)
-            os.remove(path + sl + "TEMPORARY_ZIP_TO_DELETE.zip")
-        print(Col.SUCCESS + "Successfully downloaded a folder!")
-    files_url = get_links_from_site(url.text, "https://studip.uni-trier.de/dispatch.php/file/details/+(.*)")
-    for files in files_url:
-        overview_page = requests.get(files, stream=True, cookies=cookies)
-        if "Herunterladen" in overview_page.text:
-            file_url = get_links_from_site(overview_page.text, "https://studip.uni-trier.de/sendfile.php(.*)")[0]
-            try:
-                fixed_url = file_url.replace("&amp;", "&")
-                response = requests.get(fixed_url, cookies=cookies)
-                file_name = re.search("file_name=(.*)", fixed_url)
-                file_name = file_name.group(1)
-                file_name = file_name.replace("+", " ")
-                with open(path + sl + file_name, "wb") as out_file:
-                    out_file.write(response.content)
-                print(Col.SUCCESS + "Successfully downloaded a file!")
-            except AttributeError:
-                download_folder(url, path)
+            print(Col.SUCCESS + "Successfully downloaded the following file: {}".format(file_name))
         else:
-            pass
+            print(Col.OK + "Already downloaded {}, skipping this one".format(get_name_from_head(response_header)))
+    else:
+        pass
+
+
+def get_size_from_head(head):
+    return head.headers.get("Content-Length")
+
+
+def get_name_from_head(head):
+    try:
+        return search("filename=\"(.*)\"", head.headers.get("Content-Disposition")).group(1)
+    except AttributeError:
+        return search("filename\*=UTF-8''(.*)", head.headers.get("Content-Disposition")).group(1)
+
+
+def remove_duplicates(entry_list):
+    return list(dict.fromkeys(entry_list))
+
+
+def is_new_file(head, foldername, parent):
+    dic = filehandling.get_directory_structure(config_handling.get_value("path"))
+    head_file_size = get_size_from_head(head)
+    if not parent:
+        foldername = list(filehandling.find_parent_keys(dic, foldername))[0]
+    folder = filehandling.findkey(dic, foldername)
+    if folder is not None:
+        folder = filehandling.flatten(folder)
+        if int(head_file_size) in folder.values():
+            return False
+        else:
+            return True
+    else:
+        return True
 
 
 def main():
@@ -245,7 +272,7 @@ def main():
         download_files_from_studip()
         if config_handling.get_value("moodle"):
             download_files_from_moodle()
-        filehandling.cleanup(config_handling.get_value("path"))
+        os.remove("cookies")
     except requests.ConnectionError:
         print(Col.ERROR + "No internet connection found.")
     print(Col.WARNING + "Press any key to exit")

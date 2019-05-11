@@ -18,8 +18,6 @@ def create_json_config():
     data = {
         "username": "NAME",
         "path": "",
-        "backup_bigger": "x",
-        "backup_smaller": "x",
         "moodle": "x",
         "download_videos": "x"
     }
@@ -40,7 +38,7 @@ def create_json_config():
     # path
     while not (os.path.exists(data["path"])):
         print(Col.OK + "Enter the path where the files should be downloaded. If you need help, type \"help\".")
-        path = input()
+        path: str = input()
         if path == "help":
             try:
                 import tkinter
@@ -51,24 +49,6 @@ def create_json_config():
                 print(Col.ERROR + "Your Python Version is missing Tkinter, it is not possible to open the GUI. Type "
                                   "the path manually")
         data["path"] = path
-    # backup version number 1
-    while not (type(data["backup_bigger"]) == bool):
-        print(Col.OK + "Do you want to backup the old files, if the new file is bigger? \n"
-              + Col.OK + "This can happen if the new file gets expanded [y/n]")
-        backup_big_input = input()
-        if backup_big_input in positive_answers:
-            data["backup_bigger"] = True
-        elif backup_big_input in negative_answers:
-            data["backup_bigger"] = False
-    # backup version number 2
-    while not (type(data["backup_smaller"]) == bool):
-        print(Col.OK + "Do you want to backup the old files, if the new file is smaller? \n"
-              + Col.OK + "This can happen if the new file gets compressed [y/n]")
-        backup_small_input = input()
-        if backup_small_input in positive_answers:
-            data["backup_smaller"] = True
-        elif backup_small_input in negative_answers:
-            data["backup_smaller"] = False
     while not (type(data["moodle"]) == bool):
         print(Col.OK + "Do you want to download files from moodle? [y/n]")
         moodle_input = input()
