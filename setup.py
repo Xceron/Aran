@@ -13,12 +13,13 @@ from setuptools import find_packages, setup, Command
 
 # Package meta-data.
 NAME = 'filecrawl'
-DESCRIPTION = 'A simple crawler obtaining all available files from the campus management platform Studip'
-URL = 'https://github.com/Xceron/Filecrawl'
-EMAIL = 'brand_florian@outlook.com'
+DESCRIPTION = 'A simple crawler obtaining all available files from the campus management platform Studip and ' \
+              'moodle for University Trier'
+URL = 'https://github.com/Xceron/studipcrawl'
+EMAIL = 'github@florianbrand.de'
 AUTHOR = 'Florian Brand'
 REQUIRES_PYTHON = '>=3.4.0'
-VERSION = '1.0.0'
+VERSION = '1.0.0b2'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
@@ -147,4 +148,7 @@ setup(
     cmdclass={
         'upload': UploadCommand,
     },
+    entry_points={'console_scripts': [
+        'filecrawl = filecrawl.__main__:main'
+    ]}
 )

@@ -2,22 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import platform
+from collections import Iterable
 from functools import reduce
 from collections.abc import MutableMapping
 
 
-def slash():
-    """
-    :return: appropiate slash for Unix/macOS or Windows based systems
-    """
-    if platform.system() == "Windows":
-        return "\\"
-    else:
-        return "//"
-
-
-def make_folder_name(old_name):
+def make_folder_name(old_name: str) -> str:
     """
     :param old_name: unformatted name
     :return: gets rid of useless words for a easier to find folder name in dst_folder
@@ -28,7 +18,7 @@ def make_folder_name(old_name):
     return old_name
 
 
-def get_directory_structure(rootdir):
+def get_directory_structure(rootdir: str) -> dict:
     """
     Creates a nested dictionary that represents the folder structure of rootdir
     """
@@ -45,19 +35,19 @@ def get_directory_structure(rootdir):
     return return_dict
 
 
-def findkey(dictionary, key):
+def find_key(dictionary: dict, key: object) -> object:
     try:
         if key in dictionary:
             return dictionary[key]
         for key_di, sub_dictionary in dictionary.items():
-            val = findkey(sub_dictionary, key)
+            val = find_key(sub_dictionary, key)
             if val:
                 return val
     except TypeError:
         return None
 
 
-def flatten(d, parent_key='', sep='_'):
+def flatten(d: dict, parent_key: object = '', sep: object = '_') -> dict:
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
@@ -68,7 +58,7 @@ def flatten(d, parent_key='', sep='_'):
     return dict(items)
 
 
-def find_parent_keys(d, target_key, parent_key=None):
+def find_parent_keys(d: dict, target_key: object, parent_key: object = None) -> Iterable:
     for k, v in d.items():
         if k == target_key:
             yield parent_key
