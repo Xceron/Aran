@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 import sys
 
-from .colors import Color as Col
+from colors import Color as Col
 
 
 def save_credentials(username, password):
