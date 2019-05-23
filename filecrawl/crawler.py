@@ -8,9 +8,9 @@ import platform
 import sys
 from bs4 import BeautifulSoup
 
-from filecrawl import filehandling
-from filecrawl import config_handling
-from filecrawl.colors import Color as Col
+import filehandling
+import config_handling
+from colors import Color as Col
 
 
 class GeneralDownloadManager():
