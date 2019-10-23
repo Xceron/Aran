@@ -32,7 +32,7 @@ REQUIRED = [
     "idna==2.8",
     "isort==4.3.10",
     "keyring==19.0.1",
-    "lazy-object-proxy==1.3.1",
+    "lazy-object-proxy==1.4.2",
     "mccabe==0.6.1",
     "pylint==2.3.1",
     "requests==2.21.0",
