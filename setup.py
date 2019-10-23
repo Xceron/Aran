@@ -39,7 +39,7 @@ REQUIRED = [
     "six==1.12.0",
     "soupsieve==1.8",
     "typed-ast==1.4.0",
-    "urllib3==1.24.2",
+    "urllib3==1.25.6",
     "wrapt==1.11.2"
 ]
 
