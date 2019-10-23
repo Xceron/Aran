@@ -40,7 +40,7 @@ REQUIRED = [
     "soupsieve==1.8",
     "typed-ast==1.4.0",
     "urllib3==1.24.2",
-    "wrapt==1.11.1"
+    "wrapt==1.11.2"
 ]
 
 EXTRAS = {
