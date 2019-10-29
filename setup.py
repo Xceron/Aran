@@ -32,15 +32,15 @@ REQUIRED = [
     "idna==2.8",
     "isort==4.3.10",
     "keyring==19.0.1",
-    "lazy-object-proxy==1.4.2",
+    "lazy-object-proxy==1.3.1",
     "mccabe==0.6.1",
-    "pylint==2.4.3",
+    "pylint==2.3.1",
     "requests==2.21.0",
     "six==1.12.0",
     "soupsieve==1.8",
-    "typed-ast==1.4.0",
-    "urllib3==1.25.6",
-    "wrapt==1.11.2"
+    "typed-ast==1.3.1",
+    "urllib3==1.24.2",
+    "wrapt==1.11.1"
 ]
 
 EXTRAS = {
