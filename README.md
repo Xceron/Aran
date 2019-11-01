@@ -18,14 +18,14 @@ or [STUD.IP-FileSync](https://github.com/rockihack/Stud.IP-FileSync).
 1. Download [Python 3.4+](https://www.python.org)
 2. Download Aran and unzip it.
 3. open cmd
-4. ``` cd /path/to/filecrawl/ ```
+4. ``` cd /path/to/aran/ ```
 5. ```python -m pip install -r requirements.txt```
 
 ### MacOS and Linux
 1. Download [Python 3.4+](https://www.python.org)
 2. Download Aran and unzip it.
 3. open terminal
-4. ``` cd /path/to/filecrawl/ ```
+4. ``` cd /path/to/aran/ ```
 5. ```pip3 install -r requirements.txt```
     + When you use a Linux Distro which isn't supported by the ```keyrings``` backend (e.g. Raspbian or server distros)
 you also need to run ```pip3 install keyrings.alt```
