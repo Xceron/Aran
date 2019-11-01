@@ -12,35 +12,35 @@ from shutil import rmtree
 from setuptools import find_packages, setup, Command
 
 # Package meta-data.
-NAME = 'filecrawl'
+NAME = 'Aran'
 DESCRIPTION = 'A simple crawler obtaining all available files from the campus management platform Studip and ' \
               'moodle for University Trier'
 URL = 'https://github.com/Xceron/studipcrawl'
 EMAIL = 'github@florianbrand.de'
 AUTHOR = 'Florian Brand'
 REQUIRES_PYTHON = '>=3.4.0'
-VERSION = '1.0.0b2'
+VERSION = '1.1.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    "colorama",
-    "astroid==2.2.3",
-    "beautifulsoup4==4.7.1",
-    "certifi==2018.11.29",
-    "chardet==3.0.4",
-    "entrypoints==0.3",
-    "idna==2.8",
-    "isort==4.3.10",
-    "keyring==19.0.1",
-    "lazy-object-proxy==1.3.1",
-    "mccabe==0.6.1",
-    "pylint==2.3.1",
-    "requests==2.21.0",
-    "six==1.12.0",
-    "soupsieve==1.8",
-    "typed-ast==1.3.1",
-    "urllib3==1.24.2",
-    "wrapt==1.11.1"
+    "astroid == 2.2.3",
+    "beautifulsoup4 == 4.7.1",
+    "certifi == 2018.11.29",
+    "chardet == 3.0.4",
+    "entrypoints == 0.3",
+    "idna == 2.8",
+    "isort == 4.3.10",
+    "keyring == 19.0.1",
+    "lazy - object - proxy == 1.3.1",
+    "mccabe == 0.6.1",
+    "pylint == 2.3.1",
+    "requests == 2.21.0",
+    "six == 1.12.0",
+    "soupsieve == 1.8",
+    "typed - ast == 1.3.1",
+    "urllib3 == 1.24.2",
+    "wrapt == 1.11.1",
+    "colorama"
 ]
 
 EXTRAS = {
@@ -149,6 +149,6 @@ setup(
         'upload': UploadCommand,
     },
     entry_points={'console_scripts': [
-        'filecrawl = filecrawl.__main__:main'
+        'Aran = aran.__main__:main'
     ]}
 )
