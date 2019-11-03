@@ -8,11 +8,12 @@ import keyring
 import requests
 from bs4 import BeautifulSoup
 import sys
+from typing import Union
 
 from colors import Color as Col
 
 
-def save_credentials(username, password):
+def save_credentials(username: str, password: str) -> None:
     """
     :param username: username used for Studip
     :param password: password used for Studip
@@ -21,7 +22,7 @@ def save_credentials(username, password):
     keyring.set_password("StudipCrawl", username, password)
 
 
-def get_credentials(username):
+def get_credentials(username: str) -> None:
     """
     :param username: username used for Studip
     :return: password
@@ -29,7 +30,7 @@ def get_credentials(username):
     return keyring.get_password("StudipCrawl", username)
 
 
-def validate_password(username, password):
+def validate_password(username: str, password: str) -> None:
     """
     :param username: username used for Studip
     :param password: password used for Studip
@@ -61,7 +62,7 @@ def validate_password(username, password):
             validate_password(username, password)
 
 
-def create_json_config():
+def create_json_config() -> None:
     """
     :return: saves into the json file
     """
@@ -118,28 +119,25 @@ def create_json_config():
             data["download_videos"] = False
     # convert into json data and save it
     data_json = json.dumps(data, indent=4)
-    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
-    if not os.path.exists(os.path.expanduser("~/Documents")):
-        print(Col.WARNING + "No Documents folder found in User folder, creating it")
-        os.makedirs(os.path.expanduser("~/Documents"))
-    with open(documents_path, "w") as file:
+    json_path = os.path.join(os.getcwd(), "aran_config.json")
+    with open(json_path, "w") as file:
         file.write(data_json)
 
 
-def get_value(key):
+def get_value(key: str) -> Union[bool, str]:
     """
     :param key: key of json file
     :return: value of key
     """
-    documents_path = os.path.expanduser("~/Documents/Filecrawl_config.json")
-    if not os.path.exists(documents_path):
+    json_path = os.path.join(os.getcwd(), "aran_config.json")
+    if not os.path.exists(json_path):
         print(Col.WARNING + "No config found \n"
               + Col.OK + "Setup begins")
         create_json_config()
-        if os.path.exists(documents_path):
-            print(Col.SUCCESS + "Successfully created config in the User folder.\n"
+        if os.path.exists(json_path):
+            print(Col.SUCCESS + f"Successfully created config in {os.getcwd()}.\n"
                   + Col.OK + "Starting the download")
     else:
-        with open(documents_path, "r") as file:
+        with open(json_path, "r") as file:
             data = json.load(file)
             return data[key]

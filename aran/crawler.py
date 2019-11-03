@@ -240,7 +240,7 @@ class MoodleDownloader(GeneralDownloadManager):
                         pass
 
 
-def main():
+def main() -> None:
     sd = StudipDownloader()
     sd.download_files_from_studip()
     if config_handling.get_value("moodle"):
