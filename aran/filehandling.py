@@ -13,7 +13,7 @@ def make_folder_name(old_name: str) -> str:
     :return: gets rid of useless words for a easier to find folder name in dst_folder
     """
     old_name = old_name.strip()
-    for sign in ["Vorlesung", "Übung: ", "Tutorium", " - Dateien", ": "]:
+    for sign in ["Vorlesung: ", "Übung: ", "Tutorium: ", " - Dateien", "sonstige: "]:
         old_name = old_name.replace(sign, "")
     return old_name
 
