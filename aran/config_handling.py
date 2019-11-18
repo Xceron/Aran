@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import sys
 from typing import Union
 
-from colors import Color as Col
+from aran.colors import Color as Col
 
 
 def save_credentials(username: str, password: str) -> None:
@@ -22,7 +22,7 @@ def save_credentials(username: str, password: str) -> None:
     keyring.set_password("StudipCrawl", username, password)
 
 
-def get_credentials(username: str) -> None:
+def get_credentials(username: str) -> str:
     """
     :param username: username used for Studip
     :return: password
@@ -30,7 +30,7 @@ def get_credentials(username: str) -> None:
     return keyring.get_password("StudipCrawl", username)
 
 
-def validate_password(username: str, password: str) -> None:
+def validate_password(username: str, password: str) -> bool:
     """
     :param username: username used for Studip
     :param password: password used for Studip
