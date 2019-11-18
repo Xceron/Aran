@@ -8,9 +8,9 @@ import platform
 import sys
 from bs4 import BeautifulSoup
 
-import filehandling
-import config_handling
-from colors import Color as Col
+from aran import filehandling
+from aran import config_handling
+from aran.colors import Color as Col
 
 
 class GeneralDownloadManager():
@@ -20,7 +20,8 @@ class GeneralDownloadManager():
         self.path = config_handling.get_value("path")
         self.username = config_handling.get_value("username")
 
-    def is_new_video(self, html_header: object, path: str) -> bool:
+    @staticmethod
+    def is_new_video(html_header: object, path: str) -> bool:
         """
         :param html_header: header to moodle site
         :param path: download path
@@ -33,7 +34,8 @@ class GeneralDownloadManager():
                     return False
         return True
 
-    def get_links_from_site(self, html: str, url: str) -> list:
+    @staticmethod
+    def get_links_from_site(html: str, url: str) -> list:
         """
         :param html: html text
         :param url: url with regex
@@ -44,16 +46,19 @@ class GeneralDownloadManager():
         links = [tags.get("href") for tags in site_tags]
         return links
 
-    def get_size_from_head(self, head: object) -> int:
+    @staticmethod
+    def get_size_from_head(head: object) -> int:
         return head.headers.get("Content-Length")
 
-    def get_name_from_head(self, head: object) -> str:
+    @staticmethod
+    def get_name_from_head(head: object) -> str:
         try:
             return search("filename=\"(.*)\"", head.headers.get("Content-Disposition")).group(1)
         except AttributeError:
-            return search("filename\*=UTF-8''(.*)", head.headers.get("Content-Disposition")).group(1)
+            return search("filename\*=UTF-8''(.*)", head.headers.get("Content-Disposition")).group(1)  # TODO untersuche header nach Namen, um RegEx anzupassen
 
-    def remove_duplicates(self, entry_list: list) -> list:
+    @staticmethod
+    def remove_duplicates(entry_list: list) -> list:
         return list(dict.fromkeys(entry_list))
 
     def is_new_file(self, head: object, foldername: str, parent: str) -> bool:
@@ -130,6 +135,7 @@ class StudipDownloader(GeneralDownloadManager):
         :param path: path to dir to download
         :return: download file to the directory and rename it accordingly
         """
+        
         if len(path) >= 255 and platform == "Windows":  # Windows 255 char path length limitation
             path = u"\\\\?\\{}".format(path)
         with self.session as r:
