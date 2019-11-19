@@ -21,7 +21,7 @@ or [STUD.IP-FileSync](https://github.com/rockihack/Stud.IP-FileSync).
 4. ``` cd /path/to/aran/ ```
 5. ```python -m pip install -r requirements.txt```
 
-### MacOS and Linux
+### macOS and Linux
 1. Download [Python 3.4+](https://www.python.org)
 2. Download Aran and unzip it.
 3. open terminal
