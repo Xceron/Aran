@@ -20,7 +20,7 @@ def save_credentials(username: str, password: str) -> None:
     :return: sets username and password in local keyring
     """
     keyring.set_password("StudipCrawl", username, password)
-    logger.debug(f"saved credentials {username} with {password}")
+    logger.debug(f"saved credentials {username}")
 
 
 def get_credentials(username: str) -> str:
@@ -76,7 +76,18 @@ def create_json_config() -> None:
         "username": "NAME",
         "path": "",
         "moodle": "x",
-        "download_videos": "x"
+        "replacements": {
+            "PART OF THE OLD NAME IN STUDIP": "NEW NAME FOR YOUR FILESYSTEM",
+            "e.g. Computer": "CS"
+        },
+        "fileSettings": {
+            "maxSizeInMB": 999999,
+            "noDownload": ["FILE-ENDING", "e.g. exe"]
+        },
+        "blacklist": [
+            "LINK TO A STUDIP FOLDER OR FILE",
+            "https://studip.uni-trier.de/dispatch.php/course/files/index/RANDOM DIGITS"
+        ]
     }
 
     # username and password
@@ -114,24 +125,18 @@ def create_json_config() -> None:
         moodle_input = input()
         if moodle_input in positive_answers:
             data["moodle"] = True
-            while not (type(data["download_videos"]) == bool):
-                logger.info("Do you want to download videos? [y/n]")
-                video_input = input()
-                if video_input in positive_answers:
-                    data["download_videos"] = True
-                elif video_input in negative_answers:
-                    data["download_videos"] = False
         elif moodle_input in negative_answers:
             data["moodle"] = False
-            data["download_videos"] = False
         logger.debug(f"Moodle is set to {moodle_input}")
-        logger.debug(f"Download Videos is set to {video_input}")
     # convert into json data and save it
     data_json = json.dumps(data, indent=4)
     json_path = os.path.join(os.getcwd(), "aran_config.json")
     with open(json_path, "w") as file:
         logger.debug("Successfully opened the config file")
         file.write(data_json)
+    logger.info(f"Successfully created a config in {json_path}!")
+    logger.info("Edit more settings (e.g. Blacklist or max file sizes) in this file and restart Aran!")
+    sys.exit(0)
 
 
 def get_value(key: str) -> Union[bool, str]:
