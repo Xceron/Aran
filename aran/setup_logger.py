@@ -8,8 +8,8 @@ class ColorFormatter(logging.Formatter):
     Inherits from Formatter to allow for custom logging messages.
     Taken from https://stackoverflow.com/questions/14844970/modifying-logging-message-format-based-on-message-logging-level-in-python3
     """
-    error_format = f"ERROR:%(asctime)s:%(name)s:%(message)s"
-    debug_format = f"{Col.WARNING} %(asctime)s:%(name)s:%(message)s"
+    error_format = f"ERROR:%(asctime)s:%(message)s"
+    debug_format = f"{Col.WARNING} %(asctime)s:%(message)s"
     info_format = f"{Col.OK} %(message)s"
     
     def __init__(self):
