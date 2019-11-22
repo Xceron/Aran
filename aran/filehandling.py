@@ -33,7 +33,7 @@ def get_file_size_of_dir(root_dir: str) -> Generator[int, str, None]:
     :param root_dir: directory where to start from
     :return: yields the file sizes from the directory
     """
-    logger.debug(f"Getting file size for {root_dir}")
+    logger.debug(f"Getting file sizes for {root_dir}")
     for root, dirs, files in os.walk(root_dir):
         for file in files:
             try:
