@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import sys
 from typing import Union
 
-from aran.colors import Color as Col
+from aran.setup_logger import logger
 
 
 def save_credentials(username: str, password: str) -> None:
@@ -20,6 +20,7 @@ def save_credentials(username: str, password: str) -> None:
     :return: sets username and password in local keyring
     """
     keyring.set_password("StudipCrawl", username, password)
+    logger.debug(f"saved credentials {username} with {password}")
 
 
 def get_credentials(username: str) -> str:
@@ -27,6 +28,7 @@ def get_credentials(username: str) -> str:
     :param username: username used for Studip
     :return: password
     """
+    logger.debug(f"getting credentials for {username}")
     return keyring.get_password("StudipCrawl", username)
 
 
@@ -43,9 +45,9 @@ def validate_password(username: str, password: str) -> bool:
         login_ticket = soup.find("input", {"name": "login_ticket"})["value"]
         try:
             if not homepage.ok:
-                print(Col.ERROR + "User or Studip seems to be offline.")
-                input(Col.WARNING + "Press any key to exit")
-                sys.exit(0)
+                logger.error("Studip or user is offline")
+                input("Press any key to exit")
+                sys.exit(1)
             else:
                 payload = {"security_ticket": security_token,
                            "login_ticket": login_ticket,
@@ -53,11 +55,13 @@ def validate_password(username: str, password: str) -> bool:
                            "password": password}
                 login_start = r.post("https://studip.uni-trier.de/index.php?again=yes", data=payload)
                 if "angemeldet" in login_start.text:
+                    logger.debug(f"Password is valid")
                     return True
                 else:
-                    print(Col.ERROR + "Wrong username and/or password")
+                    logger.error(f"Wrong username and/or password")
                     return False
         except AttributeError:
+            logger.debug("AttributeError, retrying login")
             # weird cases where AttributeError gets thrown
             validate_password(username, password)
 
@@ -78,9 +82,9 @@ def create_json_config() -> None:
     # username and password
 
     def check_credentials():
-        print(Col.OK + "Enter your Studip username:")
+        logger.info("Enter your Studip username:")
         username = input()
-        print(Col.OK + "Enter your Studip password: ")
+        logger.info("Enter your Studip password: ")
         password = getpass.getpass()
         data["username"] = username
         save_credentials(username, password)
@@ -90,25 +94,28 @@ def create_json_config() -> None:
         check_credentials()
     # path
     while not (os.path.exists(data["path"])):
-        print(Col.OK + "Enter the path where the files should be downloaded. If you need help, type \"help\".")
-        path: str = input()
+        logger.info("Enter the path where the files should be downloaded. If you need help, type \"help\".")
+        path = input()
         if path == "help":
+            logger.debug("Entered \"help\" as path, opening GUI")
             try:
                 import tkinter
                 from tkinter import filedialog
+                logger.debug("Opening Tkinter filedialog")
                 tkinter.Tk().withdraw()
                 path = filedialog.askdirectory()
             except ImportError:
-                print(Col.ERROR + "Your Python Version is missing Tkinter, it is not possible to open the GUI. Type "
-                                  "the path manually")
+                logger.error("Your Python version is missing Tkinter, it is not possible to open the GUI. Type "
+                             "the path manually")
+        logger.debug(f"Entered {path} as path to save files to")
         data["path"] = path
     while not (type(data["moodle"]) == bool):
-        print(Col.OK + "Do you want to download files from moodle? [y/n]")
+        logger.info("Do you want to download files from moodle? [y/n]")
         moodle_input = input()
         if moodle_input in positive_answers:
             data["moodle"] = True
             while not (type(data["download_videos"]) == bool):
-                print(Col.OK + "Do you want to download videos? [y/n]")
+                logger.info("Do you want to download videos? [y/n]")
                 video_input = input()
                 if video_input in positive_answers:
                     data["download_videos"] = True
@@ -117,10 +124,13 @@ def create_json_config() -> None:
         elif moodle_input in negative_answers:
             data["moodle"] = False
             data["download_videos"] = False
+        logger.debug(f"Moodle is set to {moodle_input}")
+        logger.debug(f"Download Videos is set to {video_input}")
     # convert into json data and save it
     data_json = json.dumps(data, indent=4)
     json_path = os.path.join(os.getcwd(), "aran_config.json")
     with open(json_path, "w") as file:
+        logger.debug("Successfully opened the config file")
         file.write(data_json)
 
 
@@ -131,13 +141,14 @@ def get_value(key: str) -> Union[bool, str]:
     """
     json_path = os.path.join(os.getcwd(), "aran_config.json")
     if not os.path.exists(json_path):
-        print(Col.WARNING + "No config found \n"
-              + Col.OK + "Setup begins")
+        logger.error("No config found")
+        logger.info("Setup begins")
         create_json_config()
         if os.path.exists(json_path):
-            print(Col.SUCCESS + f"Successfully created config in {os.getcwd()}.\n"
-                  + Col.OK + "Starting the download")
+            logger.info(f"Successfully created config in {os.getcwd()}.")
+            logger.info("Starting the download")
     else:
         with open(json_path, "r") as file:
+            logger.debug("Succesfully opened the config file")
             data = json.load(file)
             return data[key]
