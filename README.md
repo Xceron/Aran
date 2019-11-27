@@ -20,6 +20,7 @@ or [STUD.IP-FileSync](https://github.com/rockihack/Stud.IP-FileSync).
 3. open cmd
 4. ``` cd /path/to/aran/ ```
 5. ```python -m pip install -r requirements.txt```
+    + If that isn't working because `typed-ast` needs `Visual C++`, read this [article](https://www.scivision.dev/python-windows-visual-c-14-required/)
 
 ### macOS and Linux
 1. Download [Python 3.4+](https://www.python.org)
@@ -44,7 +45,7 @@ as long as the script is running.
 
 ## Troubleshooting
 
-When you get an `ImportError: No module named aran` when trying to run aran, refer to this [StackOverflow answer](https://stackoverflow.com/a/35566333)
+When you get an `ImportError: No module named aran` when trying to run aran, read this [StackOverflow answer](https://stackoverflow.com/a/35566333)
 
 ## Credits & Licence
 
