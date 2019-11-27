@@ -120,17 +120,9 @@ def create_json_config() -> None:
                              "the path manually")
         logger.debug(f"Entered {path} as path to save files to")
         data["path"] = path
-    while not (type(data["moodle"]) == bool):
-        logger.info("Do you want to download files from moodle? [y/n]")
-        moodle_input = input()
-        if moodle_input in positive_answers:
-            data["moodle"] = True
-        elif moodle_input in negative_answers:
-            data["moodle"] = False
-        logger.debug(f"Moodle is set to {moodle_input}")
     # convert into json data and save it
     data_json = json.dumps(data, indent=4)
-    json_path = os.path.join(os.getcwd(), "aran_config.json")
+    json_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "aran_config.json")
     with open(json_path, "w") as file:
         logger.debug("Successfully opened the config file")
         file.write(data_json)
@@ -144,7 +136,7 @@ def get_value(key: str) -> Union[bool, str]:
     :param key: key of json file
     :return: value of key
     """
-    json_path = os.path.join(os.getcwd(), "aran_config.json")
+    json_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "aran_config.json")
     if not os.path.exists(json_path):
         logger.error("No config found")
         logger.info("Setup begins")

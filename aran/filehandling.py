@@ -15,16 +15,16 @@ def make_folder_name(old_name: str) -> str:
     :return: gets rid of useless words for a easier to find folder name in dst_folder
     """
     logger.debug(f"Formatting {old_name}")
-    json_file = open(os.path.join(os.getcwd(), "aran_config.json"))
+    json_file = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "aran_config.json"))
     json_data = json.load(json_file)["replacements"]
     for key, values in json_data.items():
         if key in old_name:
             return values
     old_name = old_name.strip()
-    for sign in ["Vorlesung: ", "Übung: ", "Tutorium: ", " - Dateien", "sonstige: "]:
+    for sign in ["Vorlesung:", "Übung:", "Tutorium:", " - Dateien", "sonstige:", "/ "]:
         logger.debug(f"Deleting {sign} from {old_name}")
         old_name = old_name.replace(sign, "")
-    return old_name
+    return old_name.strip()
 
 
 def get_file_size_of_dir(root_dir: str) -> Generator[int, str, None]:
