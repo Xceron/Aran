@@ -1,7 +1,7 @@
 # Aran
 
 A simple crawler obtaining all available files from the campus management platforms
-Studip and moodle for University Trier
+Studip for University Trier
 
 ## Disclaimer
 This version works only for the University Trier and Studip 4.
@@ -42,6 +42,9 @@ It will guide you through the setup when you run the script for the first time.
 implemented in two paths - just ignore this. This also leads to a Finder window which is stuck
 as long as the script is running.
 
+## Troubleshooting
+
+When you get an `ImportError: No module named aran` when trying to run aran, refer to this [StackOverflow answer](https://stackoverflow.com/a/35555959)
 
 ## Credits & Licence
 
