@@ -44,7 +44,7 @@ as long as the script is running.
 
 ## Troubleshooting
 
-When you get an `ImportError: No module named aran` when trying to run aran, refer to this [StackOverflow answer](https://stackoverflow.com/a/35555959)
+When you get an `ImportError: No module named aran` when trying to run aran, refer to this [StackOverflow answer](https://stackoverflow.com/a/35566333)
 
 ## Credits & Licence
 
