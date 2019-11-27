@@ -31,7 +31,7 @@ class ColorFormatter(logging.Formatter):
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 formatter = ColorFormatter()
 file_handler = logging.FileHandler("aran.log")
 file_handler.setLevel(logging.ERROR)
