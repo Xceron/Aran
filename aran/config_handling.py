@@ -70,12 +70,9 @@ def create_json_config() -> None:
     """
     :return: saves into the json file
     """
-    positive_answers = ["yes", "y", "ye", "ja", "+", "1"]
-    negative_answers = ["no", "n", "nein", "-", "0"]
     data = {
         "username": "NAME",
         "path": "",
-        "moodle": "x",
         "replacements": {
             "PART OF THE OLD NAME IN STUDIP": "NEW NAME FOR YOUR FILESYSTEM",
             "e.g. Computer": "CS"
@@ -148,4 +145,9 @@ def get_value(key: str) -> Union[bool, str]:
         with open(json_path, "r") as file:
             logger.debug("Succesfully opened the config file")
             data = json.load(file)
-            return data[key]
+            if key == "maxSizeInMB":
+                return data["fileSettings"]["maxSizeInMB"]
+            elif key == "noDownload":
+                return data["fileSettings"]["noDownload"]
+            else:
+                return data[key]
